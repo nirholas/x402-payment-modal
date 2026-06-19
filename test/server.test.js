@@ -17,6 +17,9 @@ import {
 	CheckoutError,
 	NETWORK_SOLANA_MAINNET,
 	NETWORK_SOLANA_DEVNET,
+	solanaAccept,
+	THREE_MINT,
+	USDC_MINT_SOLANA,
 } from '../server/checkout.js';
 
 const USDC_MAINNET = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
@@ -42,6 +45,42 @@ test('isSolanaNetwork recognizes the CAIP-2 ids and the bare alias', () => {
 	assert.ok(isSolanaNetwork(NETWORK_SOLANA_DEVNET));
 	assert.ok(isSolanaNetwork('solana'));
 	assert.ok(!isSolanaNetwork('eip155:8453'));
+});
+
+test('solanaAccept builds a USDC accept from uiAmount', () => {
+	const a = solanaAccept({ token: 'usdc', uiAmount: '0.25', payTo: PAY_TO, feePayer: FEE_PAYER });
+	assert.equal(a.scheme, 'exact');
+	assert.equal(a.network, NETWORK_SOLANA_MAINNET);
+	assert.equal(a.asset, USDC_MINT_SOLANA);
+	assert.equal(a.amount, '250000'); // 0.25 * 1e6
+	assert.equal(a.payTo, PAY_TO);
+	assert.equal(a.extra.name, 'USD Coin');
+	assert.equal(a.extra.decimals, 6);
+	assert.equal(a.extra.feePayer, FEE_PAYER);
+});
+
+test('solanaAccept builds a THREE accept and carries the canonical mint', () => {
+	const a = solanaAccept({ token: 'three', uiAmount: 1000, payTo: PAY_TO, feePayer: FEE_PAYER });
+	assert.equal(a.asset, THREE_MINT);
+	assert.equal(a.amount, '1000000000'); // 1000 * 1e6
+	assert.equal(a.extra.name, 'THREE');
+	// The prepare path accepts what solanaAccept emits without further wiring.
+	assert.doesNotThrow(() => encodeX402Payment({ accept: a, signedTxBase64: 'A'.repeat(80), resourceUrl: 'https://example.com/x' }));
+});
+
+test('solanaAccept accepts an explicit mint + atomic amount', () => {
+	const mint = 'So11111111111111111111111111111111111111112';
+	const a = solanaAccept({ mint, amount: '12345', decimals: 9, name: 'Custom', payTo: PAY_TO, feePayer: FEE_PAYER });
+	assert.equal(a.asset, mint);
+	assert.equal(a.amount, '12345');
+	assert.equal(a.extra.decimals, 9);
+	assert.equal(a.extra.name, 'Custom');
+});
+
+test('solanaAccept rejects an unknown token and a missing amount', () => {
+	assert.throws(() => solanaAccept({ token: 'sol', payTo: PAY_TO, feePayer: FEE_PAYER, uiAmount: 1 }), CheckoutError);
+	assert.throws(() => solanaAccept({ token: 'usdc', payTo: PAY_TO, feePayer: FEE_PAYER }), CheckoutError);
+	assert.throws(() => solanaAccept({ token: 'usdc', uiAmount: 'abc', payTo: PAY_TO, feePayer: FEE_PAYER }), CheckoutError);
 });
 
 test('encodeX402Payment produces a decodable v2 envelope', () => {
