@@ -217,15 +217,12 @@
       outcome.textContent = `Paid ✓  (${detail.payment?.network ?? 'settled'})${payer}${tx}`;
     });
 
+    // detail.error is a string. Note: dismissing the modal does NOT fire this
+    // event — the auto-binder swallows the cancellation — so anything here is a
+    // genuine failure.
     document.addEventListener('x402:error', (event) => {
-      const error = event.detail?.error;
-      if (error && error.code === 'cancelled') {
-        outcome.className = '';
-        outcome.textContent = 'Payment cancelled.';
-        return;
-      }
       outcome.className = 'err';
-      outcome.textContent = `Payment failed: ${error?.message ?? String(error)}`;
+      outcome.textContent = `Payment failed: ${event.detail?.error ?? 'unknown error'}`;
     });
   </script>
 </body>

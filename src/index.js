@@ -18,7 +18,7 @@
 //
 // You can also call programmatically:
 //
-//   import { pay, configure } from '@three-ws/x402-modal';
+//   import { pay, configure } from '@three-ws/x402-payment-modal';
 //   const out = await pay({
 //     endpoint: '/api/paid/summarize',
 //     body: { text: 'hello' },
