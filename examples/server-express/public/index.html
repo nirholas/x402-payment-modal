@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>x402 Express checkout demo</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #0b0c10;
+      color: #e7e9ee;
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .card {
+      background: #15171e;
+      border: 1px solid #262a35;
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 460px;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    }
+    h1 { font-size: 20px; margin: 0 0 6px; }
+    p { color: #9aa1b1; margin: 0 0 20px; }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 18px;
+      font: inherit;
+      font-weight: 600;
+      color: #fff;
+      background: #6c8cff;
+      cursor: pointer;
+    }
+    button:hover { background: #5476f5; }
+    button[disabled] { opacity: 0.55; cursor: progress; }
+    #out {
+      margin-top: 18px;
+      min-height: 22px;
+      font-size: 13px;
+      color: #9aa1b1;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>x402 Express checkout demo</h1>
+    <p>Click to pay the local <code>/api/paid/hello</code> endpoint in USDC.</p>
+    <button id="pay">Say hello for 0.01 USDC</button>
+    <div id="out" role="status" aria-live="polite"></div>
+  </main>
+
+  <script type="module">
+    // Loaded from the CDN for the demo; bundle it locally for production.
+    import { pay, configure } from 'https://unpkg.com/@three-ws/x402-payment-modal';
+
+    // Tell the modal where this server's Solana checkout endpoint lives.
+    configure({
+      checkoutOrigin: window.location.origin,
+      checkoutPath: '/api/x402-checkout',
+      brand: { name: 'x402 Express demo', url: window.location.origin },
+    });
+
+    const out = document.getElementById('out');
+    document.getElementById('pay').addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      try {
+        const result = await pay({
+          endpoint: '/api/paid/hello',
+          merchant: 'x402 Express demo',
+          action: 'Say hello',
+        });
+        out.textContent = `Paid ✓  ${JSON.stringify(result.result ?? result.ok)}`;
+      } catch (err) {
+        out.textContent = err?.code === 'cancelled'
+          ? 'Cancelled.'
+          : `Failed: ${err?.message ?? err}`;
+      } finally {
+        e.target.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
