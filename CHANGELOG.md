@@ -3,6 +3,30 @@
 All notable changes to `@three-ws/x402-payment-modal` are documented here. This
 project adheres to [Semantic Versioning](https://semver.org).
 
+## 1.1.0
+
+### Added
+
+- **Pay in USDC _or_ THREE on Solana.** When a 402 challenge offers more than one
+  Solana token, the modal renders a token picker so the buyer chooses which to
+  pay in; the headline price and the built transaction follow the choice. USDC
+  and [$THREE](https://three.ws/three-token) (`FeMb…pump`) are recognized by mint
+  — correct symbol, decimals, and branding even when the `accept` omits
+  `extra.name`/`extra.decimals`.
+- **`solanaAccept()` server helper** — build a spec-shaped Solana `accept` from
+  `token: 'usdc' | 'three'` (or an explicit `mint`) with the price as `uiAmount`
+  (human) or `amount` (atomic). Exports `THREE_MINT`, `USDC_MINT_SOLANA`, and
+  `WELL_KNOWN_SOLANA_TOKENS`.
+- **`window.X402.tokens`** + client exports `THREE_MINT`, `USDC_MINT_SOLANA`,
+  `KNOWN_SOLANA_TOKENS` for inline merchants composing challenges in the browser.
+
+### Notes
+
+- THREE is a utility token, not a stablecoin: the browser can't dollar-denominate
+  it, so client-side spending caps apply to USDC only — enforce THREE caps
+  server-side. Settlement is unchanged — the checkout endpoint already transfers
+  any SPL mint named by the chosen `accept`.
+
 ## 1.0.0
 
 Initial public release. Extracted from the three.ws platform as a standalone,

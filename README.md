@@ -38,9 +38,13 @@ throttle retries, and the receipt, so you ship a paid endpoint in minutes.
 - **Zero dependencies, zero build.** Plain ES module. Drop in a `<script>` tag or
   `import` it. The Solana/EVM crypto helpers are loaded lazily from a CDN *only*
   when a payment is actually attempted.
-- **Solana + EVM.** Phantom (Solana USDC) and any injected EVM wallet (Base USDC
+- **Solana + EVM.** Phantom (Solana) and any injected EVM wallet (Base USDC
   via EIP-3009 `transferWithAuthorization`). The modal picks the right path from
   the 402 challenge.
+- **Pay in USDC _or_ THREE on Solana.** Offer both and the buyer gets a token
+  picker — pay in USDC, or in [$THREE](https://three.ws/three-token), the three.ws
+  utility token, recognized on sight (symbol, decimals, branding). See
+  [Accepting multiple Solana tokens](#accepting-multiple-solana-tokens-usdc--three).
 - **SIWX re-entry.** If a wallet already paid for a resource, it can sign back in
   instead of paying again. See [docs/siwx.md](docs/siwx.md).
 - **Spending caps.** Optional per-call / hourly / daily caps enforced in the
@@ -268,6 +272,41 @@ Lower-level helpers (`prepareSolanaCheckout`, `encodeX402Payment`,
 `handleCheckout`, `CheckoutError`) are exported from
 `@three-ws/x402-payment-modal/server`. Full guide:
 [docs/server-setup.md](docs/server-setup.md).
+
+---
+
+## Accepting multiple Solana tokens (USDC + THREE)
+
+An x402 challenge can list more than one accepted payment. List a USDC accept
+**and** a [$THREE](https://three.ws/three-token) accept on Solana, and the modal
+renders a token picker: the buyer chooses which to pay in, the headline price and
+the transaction follow the choice. No client wiring — the checkout endpoint
+already builds an SPL transfer for whatever mint the chosen accept names.
+
+Build the accepts with the `solanaAccept` helper (no hardcoded mints):
+
+```js
+import { solanaAccept } from '@three-ws/x402-payment-modal/server';
+
+// feePayer is your facilitator's sponsor account (pays the SOL network fee).
+const accepts = [
+  solanaAccept({ token: 'usdc',  uiAmount: 0.25, payTo, feePayer }), // $0.25 in USDC
+  solanaAccept({ token: 'three', uiAmount: 1000, payTo, feePayer }), // or 1,000 THREE
+];
+
+// Return them in your 402 body / PAYMENT-REQUIRED envelope:
+//   { x402Version: 2, accepts }
+```
+
+`solanaAccept` takes `token: 'usdc' | 'three'` (or an explicit `mint` for any
+SPL token), the price as `uiAmount` (human units) or `amount` (atomic string),
+and emits a spec-shaped `accept`. The constants `THREE_MINT`, `USDC_MINT_SOLANA`,
+and `WELL_KNOWN_SOLANA_TOKENS` are exported too. On the client, the same mints
+are exposed at `window.X402.tokens` for inline merchants.
+
+> **THREE is a utility token, not a stablecoin.** Its price floats, so the modal
+> can't dollar-denominate it for browser-side spending caps — enforce caps for
+> THREE server-side. USDC caps work in the browser as usual.
 
 ---
 

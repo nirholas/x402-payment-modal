@@ -36,7 +36,7 @@
 // is configurable via `configure({...})` or `data-*` attributes on the script
 // tag — see CONFIG / configure() below and docs/api-reference.md.
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 
 // ─────────────────────────────────────────────────────────── configuration ───
 // All host-specific knobs live here so the modal runs unchanged on any site.
@@ -992,7 +992,8 @@ class CheckoutModal {
 	}
 
 	renderSiwxChoice({ siwxSolana, siwxEvm }) {
-		const priceText = formatAmount(this.accept.amount, this.accept.extra?.decimals ?? 6);
+		const priceInfo = tokenInfo(this.accept);
+		const priceText = formatAmount(this.accept.amount, priceInfo.decimals);
 		// One primary button — internally we pick the wallet kind that matches
 		// the supported SIWX chains AND the detected wallets. Phantom wins ties
 		// to match the existing modal's default preference.
@@ -1003,7 +1004,7 @@ class CheckoutModal {
 		this.bodyEl.innerHTML = `
 			${this.renderSteps('connect', { discover: 'done' })}
 			<button class="x402-pay-btn" data-action="siwx">${siwxLabel}</button>
-			<button class="x402-pay-secondary" data-action="pay">Pay ${priceText} USDC instead</button>
+			<button class="x402-pay-secondary" data-action="pay">Pay ${priceText} ${escapeHtml(priceInfo.symbol)} instead</button>
 			<div class="x402-siwx-hint">Already paid for this once? Sign in to re-enter without paying again.</div>
 		`;
 		const siwxBtn = this.bodyEl.querySelector('[data-action="siwx"]');

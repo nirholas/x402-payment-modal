@@ -18,6 +18,7 @@ import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { x402CheckoutRouter } from '@three-ws/x402-payment-modal/server/express';
+import { solanaAccept } from '@three-ws/x402-payment-modal/server';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
@@ -54,36 +55,27 @@ app.get('/api/paid/hello', (req, res) => {
   const hasPayment = Boolean(req.get('X-PAYMENT'));
 
   if (!hasPayment) {
-    // No payment yet → answer with the x402 v2 challenge.
+    // No payment yet → answer with the x402 v2 challenge. We offer TWO Solana
+    // tokens — USDC and THREE — so the modal shows a token picker and the buyer
+    // chooses which to pay in. `solanaAccept` builds each spec-shaped entry.
+    const common = { payTo: DEMO_PAY_TO, feePayer: DEMO_FEE_PAYER, maxTimeoutSeconds: 60 };
     return res.status(402).json({
       x402Version: 2,
       error: 'Payment required',
       resource: {
         url: `${req.protocol}://${req.get('host')}/api/paid/hello`,
-        description: 'A friendly hello, paid for in USDC.',
+        description: 'A friendly hello — pay in USDC or THREE.',
         mimeType: 'application/json',
       },
       accepts: [
-        {
-          scheme: 'exact',
-          // Solana mainnet, in CAIP-2 form.
-          network: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
-          amount: '10000', // 0.01 USDC (USDC has 6 decimals → 10000 = 0.01)
-          asset: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC mint
-          payTo: DEMO_PAY_TO,
-          maxTimeoutSeconds: 60,
-          extra: {
-            name: 'USDC',
-            decimals: 6,
-            feePayer: DEMO_FEE_PAYER,
-          },
-        },
+        solanaAccept({ token: 'usdc', uiAmount: 0.01, ...common }),  // $0.01 in USDC
+        solanaAccept({ token: 'three', uiAmount: 1000, ...common }), // or 1,000 THREE
       ],
     });
   }
 
   // A real implementation verifies the X-PAYMENT proof here before responding.
-  return res.json({ message: 'Hello — thanks for paying with USDC!' });
+  return res.json({ message: 'Hello — thanks for paying on Solana!' });
 });
 
 // Static demo page (examples/server-express/public/index.html).
