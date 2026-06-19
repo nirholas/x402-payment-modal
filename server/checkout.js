@@ -41,6 +41,105 @@ export const NETWORK_SOLANA_DEVNET = 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1';
 const DEFAULT_MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
 const DEFAULT_DEVNET_RPC = 'https://api.devnet.solana.com';
 
+// ─────────────────────────────────────────────── Well-known Solana tokens ────
+// The two settlement assets the modal treats as first-class on Solana. USDC is
+// the universal dollar-stable rail; THREE is the three.ws utility token, so any
+// endpoint can let holders pay in THREE alongside USDC. `solanaAccept()` builds
+// the x402 `accept` entry for either (or any other SPL mint) — the prepare path
+// already transfers any mint, so offering THREE needs no further wiring.
+export const USDC_MINT_SOLANA = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+export const THREE_MINT = 'FeMbDoX7R1Psc4GEcvJdsbNbZA3bfztcyDCatJVJpump';
+
+export const WELL_KNOWN_SOLANA_TOKENS = Object.freeze({
+	usdc: { mint: USDC_MINT_SOLANA, symbol: 'USDC', name: 'USD Coin', decimals: 6 },
+	three: { mint: THREE_MINT, symbol: 'THREE', name: 'THREE', decimals: 6 },
+});
+
+/**
+ * Build one x402 Solana `accept` entry for a merchant's 402 challenge.
+ *
+ * Pass `token: 'usdc' | 'three'` for a well-known asset, or an explicit `mint`
+ * (+ optional `decimals`/`name`) for any other SPL token. Supply the price as
+ * either `amount` (atomic integer string) or `uiAmount` (human units, converted
+ * with the token's decimals). `feePayer` is the facilitator sponsor that pays
+ * the SOL network fee so buyers need only the token itself.
+ *
+ * @param {object} args
+ * @param {'usdc'|'three'} [args.token]   well-known token shortcut
+ * @param {string} [args.mint]            explicit SPL mint (base58); overrides token
+ * @param {string} args.payTo             recipient address (base58)
+ * @param {string} args.feePayer          facilitator sponsor address (base58)
+ * @param {string|number|bigint} [args.amount]    atomic integer amount
+ * @param {string|number} [args.uiAmount] human amount (e.g. 0.25) — converted via decimals
+ * @param {number} [args.decimals]        token decimals (default: well-known or 6)
+ * @param {string} [args.name]            display name for the modal (default: well-known symbol)
+ * @param {string} [args.network]         CAIP-2 network (default: Solana mainnet)
+ * @param {number} [args.maxTimeoutSeconds]
+ * @returns {SolanaAccept}
+ */
+export function solanaAccept({
+	token,
+	mint,
+	payTo,
+	feePayer,
+	amount,
+	uiAmount,
+	decimals,
+	name,
+	network = NETWORK_SOLANA_MAINNET,
+	maxTimeoutSeconds,
+} = {}) {
+	const known = token ? WELL_KNOWN_SOLANA_TOKENS[String(token).toLowerCase()] : null;
+	if (token && !known) {
+		throw new CheckoutError(400, 'invalid_request', `unknown token '${token}'. Use 'usdc', 'three', or pass an explicit mint.`);
+	}
+	const asset = mint || known?.mint;
+	if (!asset) {
+		throw new CheckoutError(400, 'invalid_request', "solanaAccept needs a token ('usdc'|'three') or an explicit mint");
+	}
+	assertPubkey(asset, 'mint');
+	assertPubkey(payTo, 'payTo');
+	assertPubkey(feePayer, 'feePayer');
+
+	const dec = Number.isFinite(decimals) ? decimals : (known?.decimals ?? 6);
+	let atomic;
+	if (amount != null) {
+		atomic = BigInt(amount).toString();
+	} else if (uiAmount != null) {
+		atomic = uiToAtomic(uiAmount, dec);
+	} else {
+		throw new CheckoutError(400, 'invalid_request', 'solanaAccept needs amount (atomic) or uiAmount (human)');
+	}
+
+	const accept = {
+		scheme: 'exact',
+		network,
+		amount: atomic,
+		asset,
+		payTo,
+		extra: {
+			name: name || known?.name || 'USDC',
+			decimals: dec,
+			feePayer,
+		},
+	};
+	if (maxTimeoutSeconds != null) accept.maxTimeoutSeconds = maxTimeoutSeconds;
+	return accept;
+}
+
+// Convert a human token amount (e.g. "0.25", 1.5) to an atomic integer string
+// without floating-point drift: split on the decimal point and pad/truncate.
+function uiToAtomic(uiAmount, decimals) {
+	const s = String(uiAmount).trim();
+	if (!/^\d+(\.\d+)?$/.test(s)) {
+		throw new CheckoutError(400, 'invalid_request', `uiAmount must be a non-negative number, got '${uiAmount}'`);
+	}
+	const [whole, frac = ''] = s.split('.');
+	const fracPadded = (frac + '0'.repeat(decimals)).slice(0, decimals);
+	const atomic = BigInt(whole) * 10n ** BigInt(decimals) + BigInt(fracPadded || '0');
+	return atomic.toString();
+}
+
 // Short-lived caches so repeated prepare calls don't re-issue identical RPC
 // round-trips. Mint decimals are effectively immutable; a Solana blockhash stays
 // valid for ~60-90s, so a few seconds of reuse cuts redundant traffic without

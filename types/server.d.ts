@@ -45,6 +45,42 @@ export const X402_VERSION: number;
 export const NETWORK_SOLANA_MAINNET: string;
 export const NETWORK_SOLANA_DEVNET: string;
 
+/** Solana USDC mint (mainnet). */
+export const USDC_MINT_SOLANA: string;
+/** $THREE — the three.ws utility token mint. */
+export const THREE_MINT: string;
+
+export interface WellKnownToken {
+	mint: string;
+	symbol: string;
+	name: string;
+	decimals: number;
+}
+
+/** Well-known Solana settlement assets, keyed by lowercase shortcut. */
+export const WELL_KNOWN_SOLANA_TOKENS: {
+	usdc: WellKnownToken;
+	three: WellKnownToken;
+};
+
+/**
+ * Build one x402 Solana `accept` entry. Pass `token: 'usdc' | 'three'` for a
+ * well-known asset or an explicit `mint`, and the price as atomic `amount` or
+ * human `uiAmount`.
+ */
+export function solanaAccept(args: {
+	token?: 'usdc' | 'three';
+	mint?: string;
+	payTo: string;
+	feePayer: string;
+	amount?: string | number | bigint;
+	uiAmount?: string | number;
+	decimals?: number;
+	name?: string;
+	network?: string;
+	maxTimeoutSeconds?: number;
+}): SolanaAccept;
+
 export class CheckoutError extends Error {
 	status: number;
 	code: string;

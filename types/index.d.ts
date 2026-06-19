@@ -105,6 +105,24 @@ export function init(): void;
 /** Library version. */
 export const version: string;
 
+/** Solana USDC mint (mainnet). */
+export const USDC_MINT_SOLANA: string;
+/** $THREE — the three.ws utility token mint. Recognized by the modal so a 402
+ *  `accept` using it renders as THREE without merchant-supplied metadata. */
+export const THREE_MINT: string;
+
+export interface KnownSolanaToken {
+	symbol: string;
+	name: string;
+	decimals: number;
+	stable?: boolean;
+	accent?: string;
+	glyph?: string;
+}
+
+/** Well-known Solana settlement assets, keyed by mint address. */
+export const KNOWN_SOLANA_TOKENS: Readonly<Record<string, KnownSolanaToken>>;
+
 /** Global exposed for non-module / inline-script usage. */
 declare global {
 	interface Window {
@@ -113,6 +131,11 @@ declare global {
 			init: typeof init;
 			configure: typeof configure;
 			version: string;
+			tokens: {
+				USDC_MINT_SOLANA: string;
+				THREE_MINT: string;
+				KNOWN_SOLANA_TOKENS: Readonly<Record<string, KnownSolanaToken>>;
+			};
 		};
 	}
 }

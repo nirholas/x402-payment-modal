@@ -134,6 +134,57 @@ function normalizeAccept(accept) {
 	return amount != null && accept.amount == null ? { ...accept, amount: String(amount) } : accept;
 }
 
+// ─────────────────────────────────────────────── Well-known Solana tokens ────
+// Mints the modal recognizes on sight, so a 402 `accept` can omit
+// `extra.name`/`extra.decimals` and still render with the correct symbol,
+// decimals, and branding. Two settlement assets are first-class on Solana:
+//   • USDC — the universal dollar-stable rail.
+//   • THREE — the three.ws utility token. Holders can pay any x402 endpoint
+//     that opts into accepting it, right alongside USDC. See three.ws/three-token.
+// A merchant offers THREE simply by adding a Solana `accept` whose `asset` is
+// THREE_MINT (the server checkout transfers any SPL mint, so no extra wiring).
+export const USDC_MINT_SOLANA = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+export const THREE_MINT = 'FeMbDoX7R1Psc4GEcvJdsbNbZA3bfztcyDCatJVJpump';
+
+export const KNOWN_SOLANA_TOKENS = Object.freeze({
+	[USDC_MINT_SOLANA]: { symbol: 'USDC', name: 'USD Coin', decimals: 6, stable: true },
+	[THREE_MINT]: { symbol: 'THREE', name: 'THREE', decimals: 6, accent: '#7aa2ff', glyph: '◆' },
+});
+
+// Resolve display metadata for an `accept`. A merchant-supplied `extra.name`/
+// `extra.decimals` always wins; otherwise we fall back to the known-token
+// registry keyed by mint, then to USDC defaults. Never throws.
+function tokenInfo(accept) {
+	const known = (accept && accept.asset && KNOWN_SOLANA_TOKENS[accept.asset]) || null;
+	const rawName = accept?.extra?.name;
+	const symbol = (rawName ? String(rawName).replace(/^USD Coin$/, 'USDC') : known?.symbol) || 'USDC';
+	const decimals = Number(accept?.extra?.decimals ?? known?.decimals ?? 6);
+	const stable = known?.stable || STABLE_NAMES.has(String(rawName || '').toLowerCase());
+	return { symbol, decimals, stable, accent: known?.accent || null, glyph: known?.glyph || null };
+}
+
+function isThreeAccept(accept) {
+	return accept?.asset === THREE_MINT;
+}
+
+// Every Solana `accept` the challenge offers, in challenge order. More than one
+// means the merchant accepts multiple tokens (e.g. USDC and THREE) and the buyer
+// gets to choose which to pay in.
+function listSolanaAccepts(challenge) {
+	return (challenge?.accepts || []).filter((a) => isSolanaNetwork(a.network));
+}
+
+// Default Solana token to surface first: USDC (stable, predictable price) when
+// offered, then any other stable, then the first accept. The buyer can switch.
+function pickDefaultSolana(list) {
+	return (
+		list.find((a) => a.asset === USDC_MINT_SOLANA) ||
+		list.find((a) => tokenInfo(a).stable) ||
+		list[0] ||
+		null
+	);
+}
+
 function isSolanaNetwork(net) {
 	return typeof net === 'string' && (net === 'solana' || net.startsWith('solana:'));
 }
@@ -228,9 +279,10 @@ function writeSpend(address, kind, bucket, value) {
 
 function toMicroUsdBrowser(amount, accept) {
 	const atomic = BigInt(amount);
-	const decimals = Number(accept?.extra?.decimals ?? 6);
+	const known = (accept && accept.asset && KNOWN_SOLANA_TOKENS[accept.asset]) || null;
+	const decimals = Number(accept?.extra?.decimals ?? known?.decimals ?? 6);
 	const name = String(accept?.extra?.name || '').toLowerCase();
-	if (STABLE_NAMES.has(name)) {
+	if (STABLE_NAMES.has(name) || known?.stable) {
 		if (decimals === 6) return atomic;
 		if (decimals > 6) return atomic / 10n ** BigInt(decimals - 6);
 		return atomic * 10n ** BigInt(6 - decimals);
@@ -564,6 +616,22 @@ const STYLES = `
 .x402-wallet-name { flex: 1; text-align: left; }
 .x402-wallet-meta { font-size: 11px; color: #8a90a8; font-weight: 500; }
 
+.x402-token-row {
+	display: flex; gap: 8px; margin-bottom: 10px;
+}
+.x402-token-pill {
+	flex: 1; min-width: 0; cursor: pointer; font-family: inherit;
+	padding: 9px 12px; border-radius: 10px;
+	background: #ffffff; border: 1.5px solid #e2e5ec;
+	display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+	transition: border-color 0.12s, background 0.12s, transform 0.05s;
+}
+.x402-token-pill:hover { border-color: #c3c9d6; background: #f9fafc; }
+.x402-token-pill:active { transform: translateY(1px); }
+.x402-token-pill.x402-on { border-color: #0f0f0f; background: #f7faff; }
+.x402-token-sym { font-size: 13px; font-weight: 700; color: #0f0f0f; letter-spacing: -0.005em; }
+.x402-token-amt { font-size: 11px; color: #8a90a8; font-weight: 600; font-variant-numeric: tabular-nums; }
+
 .x402-pay-btn {
 	width: 100%; padding: 14px 16px;
 	background: #0f0f0f; color: #fff; border: none;
@@ -796,17 +864,21 @@ class CheckoutModal {
 	}
 
 	setPrice(accept) {
-		const decimals = accept.extra?.decimals ?? 6;
-		const amount = formatAmount(accept.amount, decimals);
-		const sym = (accept.extra?.name || 'USDC').replace(/^USD Coin$/, 'USDC');
-		this.priceEl.innerHTML = `${amount}<span class="x402-currency"> ${sym}</span>`;
+		const info = tokenInfo(accept);
+		const amount = formatAmount(accept.amount, info.decimals);
+		const glyph = info.glyph ? `${info.glyph} ` : '';
+		this.priceEl.innerHTML = `${amount}<span class="x402-currency"> ${glyph}${escapeHtml(info.symbol)}</span>`;
 		this.networkEl.textContent = networkLabel(accept.network, accept);
 	}
 
 	renderConnect() {
 		const phantomDetected = typeof window !== 'undefined' && (window.solana?.isPhantom || window.phantom?.solana);
 		const evmDetected = typeof window !== 'undefined' && window.ethereum;
-		const solanaAccept = this.challenge?.accepts.find((a) => isSolanaNetwork(a.network));
+		const solanaList = listSolanaAccepts(this.challenge);
+		// Keep a valid selection: honour the buyer's prior pick if it's still on
+		// offer, otherwise fall back to the default (USDC-first).
+		let solanaAccept = solanaList.find((a) => a === this.solanaAccept) || pickDefaultSolana(solanaList);
+		this.solanaAccept = solanaAccept;
 		const evmAccept = this.challenge?.accepts.find(isEip3009Accept);
 
 		// SIWX-first path: when the 402 advertises sign-in-with-x AND we have a
@@ -838,13 +910,34 @@ class CheckoutModal {
 			if (evmViable && !solanaViable) { this.runEvm(evmAccept); return; }
 		}
 
+		// When the merchant offers more than one Solana token (e.g. USDC and
+		// THREE), let the buyer choose which to pay in. The selected token drives
+		// the headline price and the transaction the Phantom button builds.
+		const tokenChooser = solanaList.length > 1
+			? `<div class="x402-token-row" role="group" aria-label="Choose payment token">
+					${solanaList.map((a) => {
+						const info = tokenInfo(a);
+						const on = a === solanaAccept;
+						const amt = formatAmount(a.amount, info.decimals);
+						return `<button type="button" class="x402-token-pill${on ? ' x402-on' : ''}" data-token-asset="${escapeHtml(a.asset)}" aria-pressed="${on}"${info.accent && on ? ` style="border-color:${escapeHtml(info.accent)}"` : ''}>
+							<span class="x402-token-sym">${info.glyph ? escapeHtml(info.glyph) + ' ' : ''}${escapeHtml(info.symbol)}</span>
+							<span class="x402-token-amt">${amt}</span>
+						</button>`;
+					}).join('')}
+				</div>`
+			: '';
+
 		const buttons = [];
 		if (solanaAccept) {
+			const solInfo = tokenInfo(solanaAccept);
+			const solMeta = solanaList.length > 1
+				? `${networkLabel(solanaAccept.network, solanaAccept)} · ${solInfo.symbol}`
+				: networkLabel(solanaAccept.network, solanaAccept);
 			buttons.push(`
 				<button class="x402-wallet-btn" data-wallet="phantom" ${phantomDetected ? '' : 'disabled'}>
 					<div class="x402-wallet-icon x402-phantom">P</div>
 					<span class="x402-wallet-name">${phantomDetected ? 'Phantom' : 'Phantom (not detected)'}</span>
-					<span class="x402-wallet-meta">${networkLabel(solanaAccept.network, solanaAccept)}</span>
+					<span class="x402-wallet-meta" data-sol-meta>${escapeHtml(solMeta)}</span>
 				</button>
 			`);
 		}
@@ -863,16 +956,39 @@ class CheckoutModal {
 		this.bodyEl.innerHTML = `
 			${this.renderSteps('connect', { discover: 'done' })}
 			${fallbackBox}
+			${tokenChooser}
 			<div class="x402-wallet-buttons">${buttons.join('')}</div>
 		`;
 		const onClick = (e) => {
 			const btn = e.target.closest('[data-wallet]');
 			if (!btn || btn.disabled) return;
 			const wallet = btn.dataset.wallet;
-			if (wallet === 'phantom') this.runSolana(solanaAccept);
+			if (wallet === 'phantom') this.runSolana(this.solanaAccept);
 			else if (wallet === 'evm') this.runEvm(evmAccept);
 		};
 		this.bodyEl.querySelectorAll('[data-wallet]').forEach((b) => b.addEventListener('click', onClick));
+
+		// Token chooser — switch the active Solana token in place: update the
+		// headline price and the Phantom button's token label without a re-render
+		// flash, and mark the new pill pressed.
+		this.bodyEl.querySelectorAll('[data-token-asset]').forEach((pill) => {
+			pill.addEventListener('click', () => {
+				const next = solanaList.find((a) => a.asset === pill.dataset.tokenAsset);
+				if (!next || next === this.solanaAccept) return;
+				this.solanaAccept = next;
+				this.accept = next;
+				this.setPrice(next);
+				const info = tokenInfo(next);
+				const metaEl = this.bodyEl.querySelector('[data-sol-meta]');
+				if (metaEl) metaEl.textContent = `${networkLabel(next.network, next)} · ${info.symbol}`;
+				this.bodyEl.querySelectorAll('[data-token-asset]').forEach((p) => {
+					const on = p === pill;
+					p.classList.toggle('x402-on', on);
+					p.setAttribute('aria-pressed', String(on));
+					p.style.borderColor = on && info.accent ? info.accent : '';
+				});
+			});
+		});
 	}
 
 	renderSiwxChoice({ siwxSolana, siwxEvm }) {
@@ -999,7 +1115,9 @@ class CheckoutModal {
 			// Prefer Solana when Phantom is present, else first EIP-3009 EVM
 			// entry (skipping Permit2 siblings the modal can't sign for), else
 			// first accept.
-			const solana = challenge.accepts.find((a) => isSolanaNetwork(a.network));
+			const solanaList = listSolanaAccepts(challenge);
+			const solana = pickDefaultSolana(solanaList);
+			this.solanaAccept = solana; // buyer-selected Solana token (USDC/THREE/…)
 			const evm = challenge.accepts.find(isEip3009Accept);
 			const phantomDetected = typeof window !== 'undefined' && (window.solana?.isPhantom || window.phantom?.solana);
 			this.accept = (phantomDetected && solana) || evm || challenge.accepts[0];
@@ -1648,5 +1766,10 @@ if (typeof document !== 'undefined') {
 
 // Expose to merchants' inline scripts.
 if (typeof window !== 'undefined') {
-	window.X402 = Object.freeze({ pay, init, configure, version: VERSION });
+	window.X402 = Object.freeze({
+		pay, init, configure, version: VERSION,
+		// Well-known Solana settlement assets, so merchants building a 402
+		// challenge inline can reference them without hardcoding base58 mints.
+		tokens: Object.freeze({ USDC_MINT_SOLANA, THREE_MINT, KNOWN_SOLANA_TOKENS }),
+	});
 }
