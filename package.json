@@ -48,7 +48,6 @@
   ],
   "scripts": {
     "build": "node build.mjs",
-    "sync:public": "node scripts/sync-public.mjs",
     "test": "node --test test/",
     "prepublishOnly": "npm run build"
   },
