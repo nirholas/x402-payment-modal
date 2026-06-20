@@ -56,9 +56,11 @@ amount, the pay-to address, and protocol `extra`/`extensions` metadata. If the
 challenge advertises [SIWX](./siwx.md), the modal can offer sign-in re-entry
 instead of a fresh payment.
 
-If the very first response is **not** a payment challenge (e.g. an immediate
-`200`), the modal short-circuits: there is nothing to pay, so it resolves with
-that response as the result.
+If the very first response is **not** a payment challenge — e.g. an immediate
+`200` (the endpoint isn't paid) or any other non-`402` status — discovery
+**throws**: the modal renders the error on the `discover` step rather than
+silently succeeding, since pointing the modal at a free or non-x402 endpoint is
+almost always a misconfiguration worth surfacing.
 
 ## Two signing paths
 
