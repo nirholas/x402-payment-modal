@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>x402 Crypto Paywall — Solana · three.ws</title>
+  <meta name="description" content="Pay $0.01 USDC on Solana to unlock live crypto prices — a demo of the @three-ws/x402-payment-modal npm package." />
+
+  <!--
+    The payment modal is loaded straight from npm (unpkg) so this page exercises
+    the EXACT artifact we publish. Pinned to a version per the package's own
+    security guidance; bump it to test a new release.
+  -->
+  <script
+    type="module"
+    src="https://unpkg.com/@three-ws/x402-payment-modal@1.1.0"
+    data-x402-brand-name="three.ws Crypto"
+    data-x402-brand-url="https://three.ws"
+    data-x402-footer-note="x402 · Solana · settled by PayAI"></script>
+
+  <style>
+    :root {
+      --bg: #07080c;
+      --bg-glow: #15233f;
+      --card: #11131b;
+      --card-2: #0c0e15;
+      --border: #232838;
+      --border-hi: #313a52;
+      --text: #eef1f7;
+      --muted: #99a1b5;
+      --faint: #6b7280;
+      --accent: #7b8cff;
+      --accent-press: #6072f5;
+      --sol: #14f195;
+      --sol-2: #9945ff;
+      --ok: #2fd6a0;
+      --err: #ff6b6b;
+      --warn: #ffcf5c;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(900px 480px at 15% -10%, rgba(153,69,255,0.14) 0%, transparent 60%),
+        radial-gradient(900px 520px at 100% 0%, rgba(20,241,149,0.10) 0%, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: 40px 18px 64px;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; }
+
+    header.hero { margin-bottom: 26px; }
+    .brandline { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+    .dot { width: 10px; height: 10px; border-radius: 99px; background: linear-gradient(135deg, var(--sol) 0%, var(--sol-2) 100%); box-shadow: 0 0 16px rgba(20,241,149,0.55); }
+    .brandline b { letter-spacing: -0.01em; }
+    .pill {
+      margin-left: auto; font-size: 11.5px; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 99px; padding: 4px 10px;
+      display: inline-flex; align-items: center; gap: 6px; background: var(--card-2);
+    }
+    .pill .live { width: 6px; height: 6px; border-radius: 99px; background: var(--muted); }
+    .pill.ready .live { background: var(--sol); box-shadow: 0 0 8px var(--sol); }
+    h1 { font-size: 30px; line-height: 1.12; margin: 0 0 10px; letter-spacing: -0.025em; }
+    h1 .grad { background: linear-gradient(100deg, var(--sol) 0%, var(--accent) 55%, var(--sol-2) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    p.lede { margin: 0; color: var(--muted); font-size: 16px; max-width: 56ch; }
+
+    .card {
+      background: linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-top: 18px;
+    }
+    .step { display: flex; align-items: baseline; gap: 10px; margin: 0 0 14px; }
+    .step .n {
+      flex: none; width: 22px; height: 22px; border-radius: 99px; font-size: 12px; font-weight: 700;
+      display: grid; place-items: center; background: #1b2030; color: var(--muted); border: 1px solid var(--border-hi);
+    }
+    .step.done .n { background: rgba(47,214,160,0.15); color: var(--ok); border-color: rgba(47,214,160,0.4); }
+    .step h2 { font-size: 14px; margin: 0; letter-spacing: 0.01em; }
+    .step .sub { font-size: 12.5px; color: var(--muted); margin: 2px 0 0; }
+
+    label.fld { display: block; font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+    .inrow { display: flex; gap: 10px; flex-wrap: wrap; }
+    input[type=text] {
+      flex: 1 1 320px; min-width: 0;
+      background: #0a0c12; border: 1px solid var(--border-hi); border-radius: 10px;
+      color: var(--text); font: inherit; font-size: 14px; padding: 11px 13px;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: -0.01em;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    input[type=text]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(123,140,255,0.18); }
+    input[type=text].bad { border-color: var(--err); box-shadow: 0 0 0 3px rgba(255,107,107,0.16); }
+
+    button {
+      appearance: none; border: 0; border-radius: 10px; padding: 11px 16px;
+      font: inherit; font-weight: 600; color: #fff; background: var(--accent);
+      cursor: pointer; transition: transform 0.07s ease, background 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+    button:hover { background: var(--accent-press); }
+    button:active { transform: translateY(1px); }
+    button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    button.ghost { background: #1a1f2e; color: var(--text); border: 1px solid var(--border-hi); }
+    button.ghost:hover { background: #222838; }
+    button[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+    .cfg-status { margin-top: 12px; font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px; min-height: 20px; }
+    .cfg-status .tick { color: var(--ok); }
+    .cfg-status code { background: #0a0c12; border: 1px solid var(--border); border-radius: 6px; padding: 1px 7px; font-size: 12px; }
+    .cfg-status.err { color: var(--err); }
+
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      appearance: none; border: 1px solid var(--border-hi); background: #0c0f17; color: var(--muted);
+      border-radius: 99px; padding: 8px 13px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 7px; transition: all 0.13s ease;
+    }
+    .chip .tk { color: var(--faint); font-size: 11px; font-weight: 500; }
+    .chip:hover { border-color: var(--accent); color: var(--text); }
+    .chip[aria-pressed=true] { background: rgba(123,140,255,0.16); border-color: var(--accent); color: #fff; }
+    .chip:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+    .pay {
+      width: 100%; margin-top: 4px; padding: 15px 18px; font-size: 15.5px;
+      background: linear-gradient(100deg, var(--sol-2) 0%, var(--accent) 100%);
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .pay:hover { background: linear-gradient(100deg, #8a3bff 0%, var(--accent-press) 100%); }
+    .pay .price { font-variant-numeric: tabular-nums; opacity: 0.95; }
+    .paynote { text-align: center; font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+
+    /* results */
+    #results { margin-top: 18px; }
+    .res-shell {
+      border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--card-2);
+    }
+    .res-empty, .res-error { padding: 34px 22px; text-align: center; color: var(--muted); }
+    .res-empty .big { font-size: 30px; margin-bottom: 8px; opacity: 0.65; }
+    .res-error { color: var(--err); }
+    .res-error .retry { margin-top: 14px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); padding: 13px 18px; border-bottom: 1px solid var(--border); font-weight: 600; }
+    thead th.num, tbody td.num { text-align: right; }
+    tbody td { padding: 14px 18px; border-bottom: 1px solid #181b25; font-variant-numeric: tabular-nums; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .coin { display: flex; align-items: center; gap: 11px; }
+    .coin .sym { width: 34px; height: 34px; border-radius: 99px; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: #1a1f2e; color: var(--text); border: 1px solid var(--border-hi); }
+    .coin .nm { font-weight: 600; }
+    .coin .id { font-size: 11.5px; color: var(--faint); }
+    .price-cell { font-weight: 600; }
+    .chg.up { color: var(--ok); }
+    .chg.down { color: var(--err); }
+    .cap { color: var(--muted); }
+
+    .receipt { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 13px 18px; background: rgba(47,214,160,0.07); border-top: 1px solid var(--border); font-size: 13px; }
+    .receipt .ok { color: var(--ok); font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+    .receipt .kv { color: var(--muted); }
+    .receipt .kv b { color: var(--text); font-weight: 600; font-family: ui-monospace, Menlo, monospace; }
+    .receipt a { color: var(--sol); text-decoration: none; margin-left: auto; }
+    .receipt a:hover { text-decoration: underline; }
+
+    /* skeleton */
+    .sk-row { display: flex; align-items: center; gap: 11px; padding: 14px 18px; border-bottom: 1px solid #181b25; }
+    .sk { background: linear-gradient(90deg, #161a25 25%, #1f2433 50%, #161a25 75%); background-size: 200% 100%; animation: sh 1.2s infinite linear; border-radius: 6px; }
+    @keyframes sh { to { background-position: -200% 0; } }
+    .sk.circle { width: 34px; height: 34px; border-radius: 99px; flex: none; }
+    .sk.line { height: 12px; }
+
+    footer { margin-top: 30px; color: var(--muted); font-size: 12.5px; }
+    footer .how { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    footer .how div { background: var(--card-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+    footer .how b { color: var(--text); display: block; font-size: 12px; margin-bottom: 3px; }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    footer .fine { line-height: 1.7; }
+
+    @media (max-width: 560px) {
+      h1 { font-size: 24px; }
+      thead th.cap-col, tbody td.cap-col { display: none; }
+      .receipt a { margin-left: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="brandline">
+        <span class="dot" aria-hidden="true"></span>
+        <b>three.ws</b>
+        <span class="pill" id="verPill"><span class="live"></span><span id="verText">loading modal…</span></span>
+      </div>
+      <h1>Pay-per-call <span class="grad">crypto prices</span>,<br/>settled on Solana.</h1>
+      <p class="lede">
+        A live demo of <code>@three-ws/x402-payment-modal</code> — the modal we ship on npm.
+        Set a payout wallet, pick coins, and pay $0.01 USDC with Phantom to unlock real
+        CoinGecko prices. One click; no wallet code.
+      </p>
+    </header>
+
+    <!-- Step 1 — runtime payout -->
+    <section class="card" id="cfgCard">
+      <div class="step" id="step1">
+        <span class="n">1</span>
+        <div>
+          <h2>Set your payout wallet</h2>
+          <p class="sub">Set at runtime — never from a <code>.env</code> or the source. This is where the USDC lands.</p>
+        </div>
+      </div>
+      <label class="fld" for="payTo">Solana address (base58)</label>
+      <div class="inrow">
+        <input id="payTo" type="text" inputmode="text" autocomplete="off" spellcheck="false"
+               placeholder="e.g. 5xY…your Solana wallet…Jpump" aria-describedby="cfgStatus" />
+        <button id="saveCfg" class="ghost" type="button">Save</button>
+      </div>
+      <div class="cfg-status" id="cfgStatus" role="status" aria-live="polite">No payout wallet set yet.</div>
+    </section>
+
+    <!-- Step 2 — pick coins -->
+    <section class="card">
+      <div class="step">
+        <span class="n">2</span>
+        <div>
+          <h2>Pick coins to price</h2>
+          <p class="sub">Pulled live from CoinGecko (free, no key) once payment settles.</p>
+        </div>
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Coins to price"></div>
+    </section>
+
+    <!-- Step 3 — pay -->
+    <section class="card">
+      <div class="step">
+        <span class="n">3</span>
+        <div>
+          <h2>Pay &amp; unlock</h2>
+          <p class="sub">The modal handles connect → sign → settle. USDC moves on Solana mainnet.</p>
+        </div>
+      </div>
+      <button id="payBtn" class="pay" type="button" disabled>
+        <span>Pay &amp; get live prices</span>
+        <span class="price">· $0.01 USDC</span>
+      </button>
+      <p class="paynote" id="payNote">Set a payout wallet and pick at least one coin to enable.</p>
+    </section>
+
+    <!-- Results -->
+    <section id="results" aria-live="polite"></section>
+
+    <footer>
+      <div class="how">
+        <div><b>402 challenge</b>The endpoint answers unpaid calls with an x402 challenge listing the Solana price.</div>
+        <div><b>Phantom signs</b>The modal builds the USDC transfer server-side and Phantom signs it.</div>
+        <div><b>PayAI settles</b>A facilitator co-signs the fee &amp; broadcasts — you hold no keys, pay no gas.</div>
+        <div><b>Data unlocked</b>On settle, the server returns live CoinGecko prices + an on-chain receipt.</div>
+      </div>
+      <p class="fine">
+        Modal loaded from <a href="https://www.npmjs.com/package/@three-ws/x402-payment-modal" target="_blank" rel="noopener">npm</a> ·
+        prices from <a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a> ·
+        settled via <a href="https://facilitator.payai.network" target="_blank" rel="noopener">PayAI</a>.
+        Real micropayment on Solana mainnet — needs Phantom with a little USDC.
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+      const $ = (id) => document.getElementById(id);
+      const SOLSCAN = 'https://solscan.io/tx/';
+      const ADDR_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+
+      const state = { configured: false, coins: [], selected: new Set(), busy: false, last: null };
+
+      // ── wait for the npm modal to attach window.X402 ──────────────────────
+      function whenModalReady() {
+        return new Promise((resolve, reject) => {
+          if (window.X402) return resolve(window.X402);
+          let waited = 0;
+          const t = setInterval(() => {
+            if (window.X402) { clearInterval(t); resolve(window.X402); }
+            else if ((waited += 50) > 10000) { clearInterval(t); reject(new Error('payment modal failed to load from npm')); }
+          }, 50);
+        });
+      }
+
+      // ── helpers ───────────────────────────────────────────────────────────
+      const trunc = (a) => (a ? a.slice(0, 5) + '…' + a.slice(-5) : '');
+      function fmtUsd(n) {
+        if (n == null) return '—';
+        if (n >= 1000) return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        if (n >= 1) return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 6 });
+      }
+      function fmtCap(n) {
+        if (n == null) return '—';
+        if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
+        if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+        if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+        return fmtUsd(n);
+      }
+      function fmtPct(n) {
+        if (n == null) return { txt: '—', cls: '' };
+        const s = (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+        return { txt: s, cls: n >= 0 ? 'up' : 'down' };
+      }
+      function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+      // ── config (step 1) ─────────────────────────────────────────────────────
+      function setCfgStatus(html, cls) {
+        const el = $('cfgStatus');
+        el.className = 'cfg-status' + (cls ? ' ' + cls : '');
+        el.innerHTML = html;
+      }
+      function markConfigured(payTo) {
+        state.configured = true;
+        $('step1').classList.add('done');
+        setCfgStatus('<span class="tick">✓</span> Paying out to <code>' + esc(trunc(payTo)) + '</code>');
+        refreshPayBtn();
+      }
+      async function saveConfig() {
+        const v = $('payTo').value.trim();
+        const input = $('payTo');
+        if (!ADDR_RE.test(v)) {
+          input.classList.add('bad');
+          setCfgStatus('That doesn’t look like a Solana address (base58, 32–44 chars).', 'err');
+          return;
+        }
+        input.classList.remove('bad');
+        $('saveCfg').disabled = true;
+        setCfgStatus('Saving…');
+        try {
+          const r = await fetch('/api/config', {
+            method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ payTo: v }),
+          });
+          const d = await r.json();
+          if (!r.ok) throw new Error(d.error_description || 'could not save');
+          localStorage.setItem('x402demo.payTo', v);
+          markConfigured(d.payTo);
+        } catch (err) {
+          setCfgStatus(esc(err.message), 'err');
+        } finally {
+          $('saveCfg').disabled = false;
+        }
+      }
+
+      // ── coin chips (step 2) ──────────────────────────────────────────────────
+      function renderChips() {
+        const host = $('chips');
+        host.innerHTML = '';
+        const defaults = new Set(['bitcoin', 'ethereum', 'solana']);
+        state.coins.forEach((c) => {
+          const on = defaults.has(c.id);
+          if (on) state.selected.add(c.id);
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'chip';
+          b.setAttribute('aria-pressed', String(on));
+          b.dataset.id = c.id;
+          b.innerHTML = esc(c.name) + ' <span class="tk">' + esc(c.symbol) + '</span>';
+          b.addEventListener('click', () => {
+            const sel = b.getAttribute('aria-pressed') === 'true';
+            b.setAttribute('aria-pressed', String(!sel));
+            if (sel) state.selected.delete(c.id); else state.selected.add(c.id);
+            refreshPayBtn();
+          });
+          host.appendChild(b);
+        });
+        refreshPayBtn();
+      }
+
+      // ── pay button gating (step 3) ───────────────────────────────────────────
+      function refreshPayBtn() {
+        const ready = state.configured && state.selected.size > 0 && !state.busy;
+        $('payBtn').disabled = !ready;
+        const note = $('payNote');
+        if (state.busy) note.textContent = 'Payment in progress — finish in the modal…';
+        else if (!state.configured) note.textContent = 'Set a payout wallet (step 1) to enable.';
+        else if (state.selected.size === 0) note.textContent = 'Pick at least one coin (step 2) to enable.';
+        else note.textContent = 'Pays $0.01 USDC on Solana mainnet · needs Phantom.';
+      }
+
+      // ── results rendering ────────────────────────────────────────────────────
+      function renderEmpty() {
+        $('results').innerHTML =
+          '<div class="res-shell"><div class="res-empty"><div class="big">🔒</div>' +
+          'Pick coins and pay to reveal live prices.</div></div>';
+      }
+      function renderLoading() {
+        const rows = Array.from(state.selected).slice(0, 6).map(() =>
+          '<div class="sk-row"><div class="sk circle"></div>' +
+          '<div style="flex:1"><div class="sk line" style="width:38%;margin-bottom:7px"></div>' +
+          '<div class="sk line" style="width:22%;height:10px"></div></div>' +
+          '<div class="sk line" style="width:64px"></div></div>').join('');
+        $('results').innerHTML = '<div class="res-shell">' + rows + '</div>';
+      }
+      function renderError(msg) {
+        $('results').innerHTML =
+          '<div class="res-shell"><div class="res-error">⚠ ' + esc(msg) +
+          '<div class="retry"><button class="ghost" id="retryBtn" type="button">Try again</button></div></div></div>';
+        const rb = $('retryBtn');
+        if (rb) rb.addEventListener('click', startPayment);
+      }
+      function renderResults(data, payment) {
+        const rows = data.coins.map((c) => {
+          const pct = fmtPct(c.change_24h);
+          return '<tr><td><div class="coin">' +
+            '<span class="sym">' + esc(c.symbol.slice(0, 4)) + '</span>' +
+            '<span><span class="nm">' + esc(c.name) + '</span><br/><span class="id">' + esc(c.id) + '</span></span>' +
+            '</div></td>' +
+            '<td class="num price-cell">' + fmtUsd(c.price_usd) + '</td>' +
+            '<td class="num chg ' + pct.cls + '">' + pct.txt + '</td>' +
+            '<td class="num cap cap-col">' + fmtCap(c.market_cap) + '</td></tr>';
+        }).join('');
+
+        let receipt = '';
+        if (payment && (payment.transaction || payment.payer)) {
+          const tx = payment.transaction;
+          receipt = '<div class="receipt"><span class="ok">✓ Paid</span>' +
+            '<span class="kv">network <b>' + esc(payment.network || 'solana') + '</b></span>' +
+            (payment.payer ? '<span class="kv">payer <b>' + esc(trunc(payment.payer)) + '</b></span>' : '') +
+            (tx ? '<a href="' + SOLSCAN + esc(tx) + '" target="_blank" rel="noopener">view tx ↗</a>' : '') +
+            '</div>';
+        }
+
+        $('results').innerHTML =
+          '<div class="res-shell"><table><thead><tr>' +
+          '<th>Coin</th><th class="num">Price</th><th class="num">24h</th><th class="num cap-col">Mkt cap</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table>' + receipt +
+          '<div style="padding:10px 18px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--border)">' +
+          'as of ' + esc(new Date(data.asof).toLocaleTimeString()) + ' · source: ' + esc(data.source) + '</div></div>';
+      }
+
+      // ── payment flow ─────────────────────────────────────────────────────────
+      async function startPayment() {
+        if (!state.configured || state.selected.size === 0 || state.busy) return;
+        const ids = Array.from(state.selected);
+        state.busy = true;
+        refreshPayBtn();
+        renderLoading();
+        try {
+          const out = await window.X402.pay({
+            endpoint: '/api/paid/crypto',
+            method: 'POST',
+            body: { ids },
+            merchant: 'three.ws Crypto',
+            action: 'Live prices · ' + ids.length + ' coin' + (ids.length > 1 ? 's' : ''),
+          });
+          state.last = { data: out.result, payment: out.payment };
+          renderResults(out.result, out.payment);
+        } catch (err) {
+          // Dismissing the modal rejects with code 'cancelled' — restore whatever
+          // was on screen before instead of showing a scary error.
+          if (err && err.code === 'cancelled') {
+            if (state.last) renderResults(state.last.data, state.last.payment); else renderEmpty();
+          } else {
+            renderError((err && err.message) || 'payment failed');
+          }
+        } finally {
+          state.busy = false;
+          refreshPayBtn();
+        }
+      }
+
+      // ── boot ──────────────────────────────────────────────────────────────────
+      async function boot() {
+        renderEmpty();
+        $('saveCfg').addEventListener('click', saveConfig);
+        $('payTo').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveConfig(); });
+        $('payBtn').addEventListener('click', startPayment);
+
+        // prefill last-used address (convenience only; server is source of truth)
+        const saved = localStorage.getItem('x402demo.payTo');
+        if (saved) $('payTo').value = saved;
+
+        // load server config + coin catalog
+        try {
+          const cfg = await (await fetch('/api/config')).json();
+          state.coins = cfg.coins || [];
+          renderChips();
+          if (cfg.configured && cfg.payTo) { $('payTo').value = cfg.payTo; markConfigured(cfg.payTo); }
+        } catch (_) { /* offline — chips stay empty, page still explains itself */ }
+
+        // confirm the npm modal is live
+        try {
+          const X = await whenModalReady();
+          X.configure({ checkoutOrigin: location.origin, brand: { name: 'three.ws Crypto', url: 'https://three.ws' } });
+          $('verPill').classList.add('ready');
+          $('verText').textContent = 'modal v' + (X.version || '?') + ' · live from npm';
+        } catch (err) {
+          $('verText').textContent = 'modal failed to load';
+          renderError(err.message);
+        }
+      }
+
+      boot();
+    })();
+  </script>
+</body>
+</html>
