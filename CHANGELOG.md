@@ -15,6 +15,23 @@ Hardening pass for scale and a UX/accessibility overhaul.
   program (legacy vs Token-2022) and derives ATAs, the idempotent-create, and
   `transferChecked` against the right one.
 
+### Added — wallets
+
+- **Multi-wallet detection.** Solana now detects Phantom, Solflare, Backpack,
+  Glow, and Coinbase Wallet (was Phantom-only); EVM uses **EIP-6963** multi-
+  provider discovery (falling back to `window.ethereum[.providers]`) so a user
+  with several wallets isn't stuck with whichever won the injection race. The
+  connect screen lists every detected wallet; auto-connect only fires when
+  exactly one is present.
+
+### Added — developer experience
+
+- **First-class React export** — `import { X402Button, useX402 } from
+  '@three-ws/x402-payment-modal/react'`. `useX402()` exposes a
+  `{ pay, status, result, error, reset, isPaying }` state machine; both are
+  SSR-safe (the browser-only core is dynamically imported on first use). `react`
+  is an optional peer dependency.
+
 ### Added — reliability & scale
 
 - **RPC failover** — `prepareSolanaCheckout` / `handleCheckout` accept `rpcUrls`

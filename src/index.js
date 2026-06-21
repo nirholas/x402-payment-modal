@@ -26,8 +26,9 @@
 //     action: 'Summarize',
 //   });
 //
-// The modal handles wallet connect (Phantom for Solana, window.ethereum for
-// Base/EVM USDC via EIP-3009), drives the 402 → sign → retry flow, optional
+// The modal handles wallet connect (Phantom/Solflare/Backpack/… for Solana,
+// EIP-6963 browser wallets for Base/EVM USDC via EIP-3009), drives the
+// 402 → sign → retry flow, optional
 // SIWX (Sign-In-With-X) re-entry, client-side spending caps, and shows the
 // result. Vanilla JS, no bundler required.
 //
@@ -920,6 +921,65 @@ const STEP_LABELS = {
 	verify: "Payment couldn't be completed",
 };
 
+// ──────────────────────────────────────────────────── wallet discovery ────
+// Detect every injected Solana wallet, not just Phantom — Solflare/Backpack/Glow
+// users were dead-ended before. They share Phantom's connect/signTransaction/
+// signMessage shape, so each drops straight into runSolana. Returns
+// [{ kind:'solana', name, provider, icon }] in preference order.
+function discoverSolanaWallets() {
+	if (typeof window === 'undefined') return [];
+	const out = [];
+	const seen = new Set();
+	const add = (name, provider, icon) => {
+		if (!provider || typeof provider.signTransaction !== 'function' || seen.has(provider)) return;
+		seen.add(provider);
+		out.push({ kind: 'solana', name, provider, icon: icon || ICONS.wallet });
+	};
+	add('Phantom', window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null), ICONS.phantom);
+	add('Solflare', window.solflare?.isSolflare ? window.solflare : null, ICONS.wallet);
+	add('Backpack', window.backpack?.isBackpack ? window.backpack : null, ICONS.wallet);
+	add('Glow', window.glowSolana || window.glow || null, ICONS.wallet);
+	add('Coinbase Wallet', window.coinbaseSolana || null, ICONS.wallet);
+	// A standards-compliant injected provider that isn't one of the above.
+	if (window.solana && !window.solana.isPhantom) add(window.solana.isSolflare ? 'Solflare' : 'Solana wallet', window.solana, ICONS.wallet);
+	return out;
+}
+
+// EIP-6963 multi-provider discovery so a user with several EVM wallets isn't
+// stuck with whoever won the window.ethereum race. Wallets that implement 6963
+// re-announce synchronously on request; we fall back to legacy window.ethereum
+// (and its .providers[] array) when none do.
+function discoverEvmWallets() {
+	if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return [];
+	const out = [];
+	const seen = new Set();
+	const add = (name, provider, icon) => {
+		if (!provider || seen.has(provider)) return;
+		seen.add(provider);
+		out.push({ kind: 'evm', name: name || 'Browser wallet', provider, icon: icon || ICONS.wallet });
+	};
+	const announced = [];
+	const onAnnounce = (e) => { if (e?.detail) announced.push(e.detail); };
+	window.addEventListener('eip6963:announceProvider', onAnnounce);
+	try { window.dispatchEvent(new Event('eip6963:requestProvider')); } catch { /* ignore */ }
+	window.removeEventListener('eip6963:announceProvider', onAnnounce);
+	for (const d of announced) add(d.info?.name, d.provider, d.info?.icon);
+	if (!out.length) {
+		const eth = window.ethereum;
+		const label = (p) => (p?.isMetaMask ? 'MetaMask' : p?.isCoinbaseWallet ? 'Coinbase Wallet' : 'Browser wallet');
+		if (Array.isArray(eth?.providers)) for (const p of eth.providers) add(label(p), p);
+		else if (eth) add(label(eth), eth);
+	}
+	return out;
+}
+
+// A wallet's icon is either an inline SVG string (our ICONS) or a data:/https
+// URL (EIP-6963 / Wallet-Standard supply these) — render accordingly.
+function walletIconHtml(icon) {
+	if (icon && /^(data:|https?:)/.test(icon)) return `<img src="${escapeHtml(icon)}" alt="" />`;
+	return icon || ICONS.wallet;
+}
+
 function injectStyles() {
 	if (document.getElementById(STYLE_ID)) return;
 	const el = document.createElement('style');
@@ -1082,8 +1142,13 @@ class CheckoutModal {
 	}
 
 	renderConnect() {
-		const phantomDetected = typeof window !== 'undefined' && (window.solana?.isPhantom || window.phantom?.solana);
-		const evmDetected = typeof window !== 'undefined' && window.ethereum;
+		// Detect ALL injected wallets, not just Phantom/window.ethereum.
+		const solanaWallets = discoverSolanaWallets();
+		const evmWallets = discoverEvmWallets();
+		this._solWallets = solanaWallets;
+		this._evmWallets = evmWallets;
+		const phantomDetected = solanaWallets.length > 0;
+		const evmDetected = evmWallets.length > 0;
 		const solanaList = listSolanaAccepts(this.challenge);
 		// Keep a valid selection: honour the buyer's prior pick if it's still on
 		// offer, otherwise fall back to the default (USDC-first).
@@ -1114,10 +1179,12 @@ class CheckoutModal {
 		// fallback, which needs to explain itself. One-shot via autoConnectTried.
 		if (this.opts.autoConnect && !this.autoConnectTried && !this.siwxFallbackNotice) {
 			this.autoConnectTried = true;
-			const solanaViable = !!(solanaAccept && phantomDetected);
-			const evmViable = !!(evmAccept && evmDetected);
-			if (solanaViable && !evmViable) { this.runSolana(solanaAccept); return; }
-			if (evmViable && !solanaViable) { this.runEvm(evmAccept); return; }
+			// Only auto-connect when there's exactly one wallet to choose — otherwise
+			// the buyer must pick which one.
+			const solanaViable = solanaAccept && solanaWallets.length === 1;
+			const evmViable = evmAccept && evmWallets.length === 1;
+			if (solanaViable && !evmViable) { this.runSolana(solanaAccept, solanaWallets[0].provider); return; }
+			if (evmViable && !solanaViable) { this.runEvm(evmAccept, evmWallets[0].provider); return; }
 		}
 
 		// When the merchant offers more than one Solana token (e.g. USDC and
@@ -1143,22 +1210,42 @@ class CheckoutModal {
 			const solMeta = solanaList.length > 1
 				? `${networkLabel(solanaAccept.network, solanaAccept)} · ${solInfo.symbol}`
 				: networkLabel(solanaAccept.network, solanaAccept);
-			buttons.push(`
-				<button class="x402-wallet-btn" data-wallet="phantom" ${phantomDetected ? '' : 'disabled'}>
-					<div class="x402-wallet-icon">${ICONS.phantom}</div>
-					<span class="x402-wallet-name">${phantomDetected ? 'Phantom' : 'Phantom (not detected)'}</span>
-					<span class="x402-wallet-meta" data-sol-meta>${escapeHtml(solMeta)}</span>
-				</button>
-			`);
+			if (solanaWallets.length) {
+				solanaWallets.forEach((w, i) => buttons.push(`
+					<button class="x402-wallet-btn" data-wallet-kind="solana" data-wallet-idx="${i}">
+						<div class="x402-wallet-icon">${walletIconHtml(w.icon)}</div>
+						<span class="x402-wallet-name">${escapeHtml(w.name)}</span>
+						<span class="x402-wallet-meta"${i === 0 ? ' data-sol-meta' : ''}>${escapeHtml(solMeta)}</span>
+					</button>
+				`));
+			} else {
+				buttons.push(`
+					<button class="x402-wallet-btn" disabled>
+						<div class="x402-wallet-icon">${ICONS.phantom}</div>
+						<span class="x402-wallet-name">No Solana wallet detected</span>
+						<span class="x402-wallet-meta">${escapeHtml(solMeta)}</span>
+					</button>
+				`);
+			}
 		}
 		if (evmAccept) {
-			buttons.push(`
-				<button class="x402-wallet-btn" data-wallet="evm" ${evmDetected ? '' : 'disabled'}>
-					<div class="x402-wallet-icon">${ICONS.wallet}</div>
-					<span class="x402-wallet-name">${evmDetected ? 'Browser wallet' : 'No EVM wallet detected'}</span>
-					<span class="x402-wallet-meta">${networkLabel(evmAccept.network, evmAccept)}</span>
-				</button>
-			`);
+			if (evmWallets.length) {
+				evmWallets.forEach((w, i) => buttons.push(`
+					<button class="x402-wallet-btn" data-wallet-kind="evm" data-wallet-idx="${i}">
+						<div class="x402-wallet-icon">${walletIconHtml(w.icon)}</div>
+						<span class="x402-wallet-name">${escapeHtml(w.name)}</span>
+						<span class="x402-wallet-meta">${escapeHtml(networkLabel(evmAccept.network, evmAccept))}</span>
+					</button>
+				`));
+			} else {
+				buttons.push(`
+					<button class="x402-wallet-btn" disabled>
+						<div class="x402-wallet-icon">${ICONS.wallet}</div>
+						<span class="x402-wallet-name">No EVM wallet detected</span>
+						<span class="x402-wallet-meta">${escapeHtml(networkLabel(evmAccept.network, evmAccept))}</span>
+					</button>
+				`);
+			}
 		}
 		// When nothing is installed, don't dead-end — point users to a wallet.
 		const installHelp = (!phantomDetected && !evmDetected)
@@ -1184,13 +1271,14 @@ class CheckoutModal {
 		`;
 		requestAnimationFrame(() => this.focusFirst());
 		const onClick = (e) => {
-			const btn = e.target.closest('[data-wallet]');
+			const btn = e.target.closest('[data-wallet-kind]');
 			if (!btn || btn.disabled) return;
-			const wallet = btn.dataset.wallet;
-			if (wallet === 'phantom') this.runSolana(this.solanaAccept);
-			else if (wallet === 'evm') this.runEvm(evmAccept);
+			const kind = btn.dataset.walletKind;
+			const idx = Number(btn.dataset.walletIdx);
+			if (kind === 'solana') this.runSolana(this.solanaAccept, this._solWallets[idx]?.provider);
+			else if (kind === 'evm') this.runEvm(evmAccept, this._evmWallets[idx]?.provider);
 		};
-		this.bodyEl.querySelectorAll('[data-wallet]').forEach((b) => b.addEventListener('click', onClick));
+		this.bodyEl.querySelectorAll('[data-wallet-kind]').forEach((b) => b.addEventListener('click', onClick));
 
 		// Token chooser — switch the active Solana token in place: update the
 		// headline price and the Phantom button's token label without a re-render
@@ -1366,13 +1454,14 @@ class CheckoutModal {
 		}
 	}
 
-	async runSolana(accept) {
+	async runSolana(accept, providerArg) {
 		this.accept = accept;
 		this.setPrice(accept);
-		this.renderProgress('connect', { text: 'Opening Phantom…' });
+		const provider = providerArg || window.phantom?.solana || window.solana;
+		const walletName = provider?.isPhantom ? 'Phantom' : (this._solWallets?.find((w) => w.provider === provider)?.name || 'wallet');
+		this.renderProgress('connect', { text: `Opening ${walletName}…` });
 		try {
-			const provider = window.phantom?.solana || window.solana;
-			if (!provider) throw new Error('Phantom wallet not detected');
+			if (!provider) throw new Error('No Solana wallet detected');
 			const conn = await provider.connect();
 			const payerAddress = (conn?.publicKey || provider.publicKey)?.toString();
 			if (!payerAddress) throw new Error('Phantom did not return a public key');
@@ -1421,12 +1510,12 @@ class CheckoutModal {
 		}
 	}
 
-	async runEvm(accept) {
+	async runEvm(accept, providerArg) {
 		this.accept = accept;
 		this.setPrice(accept);
 		this.renderProgress('connect', { text: 'Opening browser wallet…' });
 		try {
-			const eth = window.ethereum;
+			const eth = providerArg || window.ethereum;
 			if (!eth) throw new Error('No EVM wallet detected');
 			const accounts = await eth.request({ method: 'eth_requestAccounts' });
 			const payerAddress = accounts?.[0];

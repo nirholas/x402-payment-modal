@@ -32,6 +32,11 @@
       "import": "./server/vercel.js",
       "default": "./server/vercel.js"
     },
+    "./react": {
+      "types": "./react/index.d.ts",
+      "import": "./react/index.js",
+      "default": "./react/index.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -39,6 +44,7 @@
     "dist",
     "types",
     "server",
+    "react",
     "examples",
     "docs",
     "README.md",
@@ -87,13 +93,17 @@
   },
   "peerDependencies": {
     "@solana/web3.js": "^1.95.0",
-    "@solana/spl-token": "^0.4.0"
+    "@solana/spl-token": "^0.4.0",
+    "react": ">=17"
   },
   "peerDependenciesMeta": {
     "@solana/web3.js": {
       "optional": true
     },
     "@solana/spl-token": {
+      "optional": true
+    },
+    "react": {
       "optional": true
     }
   },
