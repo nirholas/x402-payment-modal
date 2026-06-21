@@ -25,6 +25,7 @@ import {
 } from '@solana/web3.js';
 import {
 	TOKEN_PROGRAM_ID,
+	TOKEN_2022_PROGRAM_ID,
 	ASSOCIATED_TOKEN_PROGRAM_ID,
 	getAssociatedTokenAddressSync,
 	createAssociatedTokenAccountIdempotentInstruction,
@@ -148,6 +149,7 @@ const MINT_DECIMALS_TTL_MS = 5 * 60 * 1000;
 const BLOCKHASH_TTL_MS = 8 * 1000;
 const mintDecimalsCache = new Map(); // `${rpc}:${mint}` -> { decimals, at }
 const blockhashCache = new Map(); // rpc -> { blockhash, at }
+const tokenProgramCache = new Map(); // `${rpc}:${mint}` -> { programId, at }
 
 /** Thrown for any client-correctable problem; carries an HTTP `status` + `code`. */
 export class CheckoutError extends Error {
@@ -207,11 +209,31 @@ function validateAccept(accept) {
 	return accept;
 }
 
-async function getMintDecimals(conn, rpc, mint) {
+// Resolve which token program owns a mint — legacy SPL Token or Token-2022.
+// Pump.fun mints (including THREE) and many newer assets are Token-2022, whose
+// program id differs; deriving ATAs or building transferChecked with the wrong
+// program yields the wrong accounts and an unprocessable transaction. The owner
+// is immutable, so cache it like decimals.
+async function getTokenProgramId(conn, rpc, mint) {
+	const key = `${rpc}:${mint.toBase58()}`;
+	const hit = tokenProgramCache.get(key);
+	if (hit && Date.now() - hit.at < MINT_DECIMALS_TTL_MS) return hit.programId;
+	const info = await conn.getAccountInfo(mint, 'confirmed');
+	if (!info) throw new CheckoutError(400, 'invalid_request', `mint ${mint.toBase58()} not found on this network`);
+	const owner = info.owner;
+	let programId;
+	if (owner.equals(TOKEN_2022_PROGRAM_ID)) programId = TOKEN_2022_PROGRAM_ID;
+	else if (owner.equals(TOKEN_PROGRAM_ID)) programId = TOKEN_PROGRAM_ID;
+	else throw new CheckoutError(400, 'invalid_request', `mint ${mint.toBase58()} is not an SPL token (owner ${owner.toBase58()})`);
+	tokenProgramCache.set(key, { programId, at: Date.now() });
+	return programId;
+}
+
+async function getMintDecimals(conn, rpc, mint, programId) {
 	const key = `${rpc}:${mint.toBase58()}`;
 	const hit = mintDecimalsCache.get(key);
 	if (hit && Date.now() - hit.at < MINT_DECIMALS_TTL_MS) return hit.decimals;
-	const info = await getMint(conn, mint);
+	const info = await getMint(conn, mint, 'confirmed', programId);
 	mintDecimalsCache.set(key, { decimals: info.decimals, at: Date.now() });
 	return info.decimals;
 }
@@ -249,13 +271,18 @@ export async function prepareSolanaCheckout({ accept, buyer, rpcUrl, devnetRpcUr
 	const buyerPubkey = new PublicKey(buyer);
 	const amount = BigInt(accept.amount);
 
+	// Pick the owning token program (legacy SPL Token vs Token-2022) so ATAs,
+	// the idempotent create, and transferChecked all target the right program —
+	// THREE and other pump.fun mints are Token-2022.
+	const tokenProgramId = await getTokenProgramId(conn, rpc, mint);
+
 	const senderAta = getAssociatedTokenAddressSync(
-		mint, buyerPubkey, false, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID,
+		mint, buyerPubkey, false, tokenProgramId, ASSOCIATED_TOKEN_PROGRAM_ID,
 	);
 	const receiverAta = getAssociatedTokenAddressSync(
-		mint, payTo, false, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID,
+		mint, payTo, false, tokenProgramId, ASSOCIATED_TOKEN_PROGRAM_ID,
 	);
-	const mintDecimals = await getMintDecimals(conn, rpc, mint);
+	const mintDecimals = await getMintDecimals(conn, rpc, mint, tokenProgramId);
 
 	const ixs = [
 		ComputeBudgetProgram.setComputeUnitLimit({ units: 60_000 }),
@@ -267,13 +294,13 @@ export async function prepareSolanaCheckout({ accept, buyer, rpcUrl, devnetRpcUr
 	if (!receiverInfo) {
 		ixs.push(
 			createAssociatedTokenAccountIdempotentInstruction(
-				feePayer, receiverAta, payTo, mint, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID,
+				feePayer, receiverAta, payTo, mint, tokenProgramId, ASSOCIATED_TOKEN_PROGRAM_ID,
 			),
 		);
 	}
 	ixs.push(
 		createTransferCheckedInstruction(
-			senderAta, mint, receiverAta, buyerPubkey, amount, mintDecimals, [], TOKEN_PROGRAM_ID,
+			senderAta, mint, receiverAta, buyerPubkey, amount, mintDecimals, [], tokenProgramId,
 		),
 	);
 
