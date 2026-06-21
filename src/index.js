@@ -36,7 +36,7 @@
 // is configurable via `configure({...})` or `data-*` attributes on the script
 // tag — see CONFIG / configure() below and docs/api-reference.md.
 
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 
 // ─────────────────────────────────────────────────────────── configuration ───
 // All host-specific knobs live here so the modal runs unchanged on any site.
@@ -58,6 +58,10 @@ const CONFIG = {
 	// ERC-8021 builder-code self-attribution echoed back when the 402 challenge
 	// declares a builder-code extension. Set either field to '' to disable it.
 	builderCode: { wallet: '3d_agent', service: '3d_agent_modal' },
+	// Color scheme: 'auto' follows the OS; 'light'/'dark' force it.
+	theme: 'auto',
+	// Optional flat map of --x402-* design tokens for brand-matching at runtime.
+	cssVars: null,
 	// Primary CDN URLs for the crypto helpers loaded on demand (only when a Solana
 	// or EVM sign-in payment is actually attempted). Each is tried first, then the
 	// loader falls back across additional independent CDNs (see ESM_FALLBACKS) so a
@@ -94,12 +98,19 @@ const ESM_IMPORT_TIMEOUT_MS = 12_000;
  */
 export function configure(opts = {}) {
 	if (!opts || typeof opts !== 'object') return CONFIG;
-	for (const key of ['checkoutOrigin', 'checkoutPath', 'footerNote']) {
+	// theme: 'light' | 'dark' | 'auto' — force the modal's color scheme regardless
+	// of the OS preference (auto = follow the OS, the default).
+	for (const key of ['checkoutOrigin', 'checkoutPath', 'footerNote', 'theme']) {
 		if (opts[key] !== undefined) CONFIG[key] = opts[key];
 	}
 	if (opts.brand && typeof opts.brand === 'object') Object.assign(CONFIG.brand, opts.brand);
 	if (opts.builderCode && typeof opts.builderCode === 'object') Object.assign(CONFIG.builderCode, opts.builderCode);
 	if (opts.esm && typeof opts.esm === 'object') Object.assign(CONFIG.esm, opts.esm);
+	// cssVars: a flat map of x402 design tokens to brand-match without CSS files,
+	// e.g. configure({ cssVars: { '--x402-accent': '#ff5c00', '--x402-radius': '8px' } }).
+	if (opts.cssVars && typeof opts.cssVars === 'object') {
+		CONFIG.cssVars = { ...(CONFIG.cssVars || {}), ...opts.cssVars };
+	}
 	return CONFIG;
 }
 
@@ -889,6 +900,26 @@ const STYLES = `
 }
 `;
 
+// Crisp inline SVG iconography — emoji/letter placeholders render differently
+// per-OS and read as cheap; these inherit currentColor and stay sharp at any DPI.
+const ICONS = {
+	close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+	lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+	check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>',
+	shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.4-7 9-4-1.6-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+	phantom: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#ab9ff2"/><path fill="#fff" d="M19 12.4c0 3.8-3.1 6.8-7 6.8-.6 0-1-.6-.7-1.1.2-.4 0-.9-.4-1.1-.4-.2-1 0-1.3.4-.5.7-1.3 1.1-2.2 1.1H6.7c-1.2 0-2.2-1-2.2-2.2v-1.7c0-4.1 3.4-7.4 7.5-7.4h-.1c3.9 0 7.1 2.6 7.1 5.9z"/><circle cx="9.4" cy="12.4" r="1" fill="#534bb1"/><circle cx="12.6" cy="12.4" r="1" fill="#534bb1"/></svg>',
+	wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><circle cx="16.5" cy="14" r="1.3" fill="currentColor" stroke="none"/></svg>',
+};
+
+// Human-readable headings for the failure step shown in the error box. Never
+// surface the internal step id ("authorize", "verify") to a buyer.
+const STEP_LABELS = {
+	discover: "Couldn't confirm the price",
+	connect: "Couldn't connect your wallet",
+	authorize: "Payment couldn't be authorized",
+	verify: "Payment couldn't be completed",
+};
+
 function injectStyles() {
 	if (document.getElementById(STYLE_ID)) return;
 	const el = document.createElement('style');
@@ -923,22 +954,40 @@ class CheckoutModal {
 		injectStyles();
 		const overlay = document.createElement('div');
 		overlay.className = 'x402-overlay';
+		// Forced color scheme (configure({ theme })) overrides the OS preference.
+		if (CONFIG.theme === 'dark') overlay.classList.add('x402-theme-dark');
+		else if (CONFIG.theme === 'light') overlay.classList.add('x402-theme-light');
+		// Brand design-token overrides applied inline so they win without !important.
+		if (CONFIG.cssVars && typeof CONFIG.cssVars === 'object') {
+			for (const [k, v] of Object.entries(CONFIG.cssVars)) {
+				if (/^--x402-[a-z0-9-]+$/i.test(k)) overlay.style.setProperty(k, String(v));
+			}
+		}
+		const logo = CONFIG.brand?.logo
+			? `<img class="x402-brand-logo" src="${escapeHtml(CONFIG.brand.logo)}" alt="" />`
+			: '';
 		overlay.innerHTML = `
-			<div class="x402-modal" role="dialog" aria-modal="true" aria-label="x402 payment">
+			<div class="x402-modal" role="dialog" aria-modal="true" aria-labelledby="x402-act" aria-describedby="x402-price">
 				<div class="x402-head">
 					<div class="x402-merchant">
-						<div class="x402-name" data-merchant>${escapeHtml(this.opts.merchant || 'Payment')}</div>
-						<div class="x402-action" data-action>${escapeHtml(this.opts.action || 'Pay-per-call')}</div>
+						${logo}
+						<div class="x402-merchant-text">
+							<div class="x402-name" data-merchant>${escapeHtml(this.opts.merchant || 'Payment')}</div>
+							<div class="x402-action" id="x402-act" data-action>${escapeHtml(this.opts.action || 'Pay-per-call')}</div>
+						</div>
 					</div>
-					<button class="x402-close" data-close aria-label="Close">✕</button>
+					<button class="x402-close" data-close aria-label="Close payment">${ICONS.close}</button>
 				</div>
 				<div class="x402-price-row">
-					<div class="x402-price" data-price>—<span class="x402-currency"> USDC</span></div>
+					<div class="x402-price-main">
+						<div class="x402-price" id="x402-price" data-price>—<span class="x402-currency"> USDC</span></div>
+						<div class="x402-price-sub" data-price-sub></div>
+					</div>
 					<div class="x402-network" data-network>resolving…</div>
 				</div>
-				<div class="x402-body" data-body></div>
+				<div class="x402-body" data-body aria-live="polite"></div>
 				<div class="x402-foot">
-					<span class="x402-secure">${escapeHtml(CONFIG.footerNote)}</span>
+					<span class="x402-secure">${ICONS.lock}${escapeHtml(CONFIG.footerNote)}</span>
 					${CONFIG.brand?.name ? `<a href="${escapeHtml(CONFIG.brand.url || '#')}" target="_blank" rel="noopener">Powered by ${escapeHtml(CONFIG.brand.name)}</a>` : ''}
 				</div>
 			</div>
@@ -947,16 +996,47 @@ class CheckoutModal {
 		this.overlay = overlay;
 		this.bodyEl = overlay.querySelector('[data-body]');
 		this.priceEl = overlay.querySelector('[data-price]');
+		this.priceSubEl = overlay.querySelector('[data-price-sub]');
 		this.networkEl = overlay.querySelector('[data-network]');
 		overlay.querySelector('[data-close]').addEventListener('click', () => this.close('cancelled'));
 		overlay.addEventListener('click', (e) => { if (e.target === overlay) this.close('cancelled'); });
-		this.onKey = (e) => { if (e.key === 'Escape') this.close('cancelled'); };
+		// Remember what had focus so we can restore it on close (a11y).
+		this.previouslyFocused = typeof document !== 'undefined' ? document.activeElement : null;
+		this.onKey = (e) => {
+			if (e.key === 'Escape') { this.close('cancelled'); return; }
+			if (e.key === 'Tab') this.trapTab(e);
+		};
 		document.addEventListener('keydown', this.onKey);
-		requestAnimationFrame(() => overlay.classList.add('x402-open'));
+		requestAnimationFrame(() => {
+			overlay.classList.add('x402-open');
+			this.focusFirst();
+		});
 		return new Promise((resolve, reject) => {
 			this.resolve = resolve;
 			this.reject = reject;
 		});
+	}
+
+	// All visible, enabled, focusable elements inside the modal, in DOM order.
+	focusables() {
+		if (!this.overlay) return [];
+		const sel = 'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+		return Array.from(this.overlay.querySelectorAll(sel)).filter((el) => el.offsetParent !== null);
+	}
+
+	focusFirst() {
+		const list = this.focusables();
+		(list.find((el) => !el.hasAttribute('data-close')) || list[0])?.focus?.();
+	}
+
+	// Keep Tab within the dialog — a modal must not leak focus to the page behind.
+	trapTab(e) {
+		const list = this.focusables();
+		if (!list.length) return;
+		const first = list[0];
+		const last = list[list.length - 1];
+		if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+		else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 	}
 
 	close(reason) {
@@ -965,6 +1045,8 @@ class CheckoutModal {
 		document.removeEventListener('keydown', this.onKey);
 		this.overlay.classList.remove('x402-open');
 		setTimeout(() => this.overlay.remove(), 180);
+		// Restore focus to whatever triggered the modal.
+		this.previouslyFocused?.focus?.();
 		if (reason === 'cancelled' && this.reject) {
 			const err = new Error('cancelled');
 			err.code = 'cancelled';
@@ -1063,7 +1145,7 @@ class CheckoutModal {
 				: networkLabel(solanaAccept.network, solanaAccept);
 			buttons.push(`
 				<button class="x402-wallet-btn" data-wallet="phantom" ${phantomDetected ? '' : 'disabled'}>
-					<div class="x402-wallet-icon x402-phantom">P</div>
+					<div class="x402-wallet-icon">${ICONS.phantom}</div>
 					<span class="x402-wallet-name">${phantomDetected ? 'Phantom' : 'Phantom (not detected)'}</span>
 					<span class="x402-wallet-meta" data-sol-meta>${escapeHtml(solMeta)}</span>
 				</button>
@@ -1072,21 +1154,35 @@ class CheckoutModal {
 		if (evmAccept) {
 			buttons.push(`
 				<button class="x402-wallet-btn" data-wallet="evm" ${evmDetected ? '' : 'disabled'}>
-					<div class="x402-wallet-icon x402-metamask">M</div>
+					<div class="x402-wallet-icon">${ICONS.wallet}</div>
 					<span class="x402-wallet-name">${evmDetected ? 'Browser wallet' : 'No EVM wallet detected'}</span>
 					<span class="x402-wallet-meta">${networkLabel(evmAccept.network, evmAccept)}</span>
 				</button>
 			`);
 		}
+		// When nothing is installed, don't dead-end — point users to a wallet.
+		const installHelp = (!phantomDetected && !evmDetected)
+			? `<div class="x402-wallet-install">No wallet detected — install
+					${solanaAccept ? `<a href="https://phantom.app/download" target="_blank" rel="noopener">Phantom</a>` : ''}${solanaAccept && evmAccept ? ' or ' : ''}${evmAccept ? `<a href="https://metamask.io/download" target="_blank" rel="noopener">MetaMask</a>` : ''}
+					to continue.</div>`
+			: '';
 		const fallbackBox = this.siwxFallbackNotice
 			? `<div class="x402-siwx-fallback">${escapeHtml(this.siwxFallbackNotice)}</div>`
 			: '';
+		// True for the exact scheme: the signed authorization can only move the
+		// stated amount to the stated recipient — a strong, honest trust signal.
+		const trustInfo = tokenInfo(this.accept);
+		const trustAmt = formatAmount(this.accept.amount, trustInfo.decimals);
+		const trustLine = `<div class="x402-trust">${ICONS.shield}<span>You authorize exactly ${escapeHtml(trustAmt)} ${escapeHtml(trustInfo.symbol)} — nothing more can be charged.</span></div>`;
 		this.bodyEl.innerHTML = `
 			${this.renderSteps('connect', { discover: 'done' })}
 			${fallbackBox}
 			${tokenChooser}
 			<div class="x402-wallet-buttons">${buttons.join('')}</div>
+			${installHelp}
+			${(phantomDetected || evmDetected) ? trustLine : ''}
 		`;
+		requestAnimationFrame(() => this.focusFirst());
 		const onClick = (e) => {
 			const btn = e.target.closest('[data-wallet]');
 			if (!btn || btn.disabled) return;
@@ -1168,10 +1264,15 @@ class CheckoutModal {
 				[stepId]: 'error',
 				[`${stepId}_meta`]: 'failed',
 			})}
-			<div class="x402-error-box"><strong>${escapeHtml(stepId)}:</strong> ${escapeHtml(message)}</div>
+			<div class="x402-error-box">
+				<div class="x402-error-title">${escapeHtml(STEP_LABELS[stepId] || 'Something went wrong')}</div>
+				<div class="x402-error-detail">${escapeHtml(message)}</div>
+			</div>
 			<button class="x402-pay-btn" data-retry>Try again</button>
 		`;
-		this.bodyEl.querySelector('[data-retry]').addEventListener('click', () => this.start());
+		const retry = this.bodyEl.querySelector('[data-retry]');
+		retry.addEventListener('click', () => this.start());
+		requestAnimationFrame(() => retry.focus());
 	}
 
 	renderDone({ result, payment, siwx }) {
@@ -1181,7 +1282,8 @@ class CheckoutModal {
 			const addrShort = siwx.address ? `${siwx.address.slice(0, 8)}…${siwx.address.slice(-6)}` : '—';
 			receiptHtml = `
 				<div class="x402-receipt">
-					<div class="x402-receipt-title">Welcome back!</div>
+					<div class="x402-receipt-check">${ICONS.check}</div>
+					<div class="x402-receipt-title">Welcome back</div>
 					<div class="x402-receipt-row">
 						<span class="x402-k">network</span>
 						<span class="x402-v">${escapeHtml(networkLabel(siwx.network) || siwx.network || '—')}</span>
@@ -1201,7 +1303,8 @@ class CheckoutModal {
 			const txShort = payment?.transaction ? `${payment.transaction.slice(0, 8)}…${payment.transaction.slice(-6)}` : '—';
 			receiptHtml = `
 				<div class="x402-receipt">
-					<div class="x402-receipt-title">Payment confirmed!</div>
+					<div class="x402-receipt-check">${ICONS.check}</div>
+					<div class="x402-receipt-title">Payment confirmed</div>
 					<div class="x402-receipt-row">
 						<span class="x402-k">network</span>
 						<span class="x402-v">${escapeHtml(networkLabel(payment?.network) || '—')}</span>
@@ -1220,21 +1323,24 @@ class CheckoutModal {
 				</div>
 			`;
 		}
+		// A string result is human-readable content (a summary, an answer) — show it
+		// as prose, not in a monospace JSON box. Objects stay as formatted JSON.
+		const isProse = typeof result === 'string';
 		this.bodyEl.innerHTML = `
 			${receiptHtml}
-			<div class="x402-result">${escapeHtml(resultStr).slice(0, 4000)}</div>
+			<div class="x402-result${isProse ? ' x402-prose' : ''}">${escapeHtml(resultStr).slice(0, 4000)}</div>
 			<button class="x402-pay-btn" data-done>Done</button>
 		`;
-		this.bodyEl.querySelector('[data-done]').addEventListener('click', () => {
-			this.disposed = true;
-			document.removeEventListener('keydown', this.onKey);
-			this.overlay.classList.remove('x402-open');
-			setTimeout(() => this.overlay.remove(), 180);
-		});
+		const doneBtn = this.bodyEl.querySelector('[data-done]');
+		doneBtn.addEventListener('click', () => this.close('done'));
+		requestAnimationFrame(() => doneBtn.focus());
 	}
 
 	async start() {
 		this.bodyEl.innerHTML = this.renderSteps('discover');
+		// Shimmer skeletons for the price/network while we fetch the challenge.
+		this.priceEl.innerHTML = '<span class="x402-skeleton" style="display:inline-block;width:92px;height:26px;vertical-align:middle"></span>';
+		this.networkEl.innerHTML = '<span class="x402-skeleton" style="display:inline-block;width:58px;height:11px;border-radius:99px"></span>';
 		// Pre-warm the Solana web3 import now (while the user reads the modal and we
 		// fetch the challenge) so a slow CDN doesn't stall at sign time. Best-effort.
 		loadSolanaWeb3().catch(() => {});
@@ -1433,6 +1539,9 @@ class CheckoutModal {
 		this.renderProgress('verify', {
 			text: attempt ? 'Retrying after upstream throttle…' : 'Calling merchant endpoint…',
 		});
+		// One idempotency key for this payment's whole lifetime (all retries and any
+		// "Try again") so a re-sent X-PAYMENT settles at most once — no double charge.
+		if (!this.idempotencyKey) this.idempotencyKey = `x402-${randomHex(16)}`;
 		try {
 			const res = await fetch(this.opts.endpoint, {
 				method: this.opts.method || 'GET',
@@ -1440,6 +1549,8 @@ class CheckoutModal {
 					...(this.opts.headers || {}),
 					...(this.opts.body && !this.opts.headers?.['content-type'] ? { 'content-type': 'application/json' } : {}),
 					'X-PAYMENT': xPayment,
+					'Idempotency-Key': this.idempotencyKey,
+					'X-Idempotency-Key': this.idempotencyKey,
 				},
 				body: this.opts.body ? (typeof this.opts.body === 'string' ? this.opts.body : JSON.stringify(this.opts.body)) : undefined,
 			});

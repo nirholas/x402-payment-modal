@@ -58,11 +58,16 @@ export interface PayResult {
 	};
 }
 
-/** Branding shown in the modal footer. */
+/** Branding shown in the modal header/footer. */
 export interface BrandConfig {
 	name?: string;
 	url?: string;
+	/** Logo shown in the modal header (URL). */
+	logo?: string;
 }
+
+/** Forced color scheme. `auto` (default) follows the OS preference. */
+export type X402Theme = 'auto' | 'light' | 'dark';
 
 /** ERC-8021 builder-code self-attribution echoed when the 402 challenge declares one. */
 export interface BuilderCodeConfig {
@@ -84,6 +89,10 @@ export interface X402Config {
 	footerNote?: string;
 	builderCode?: BuilderCodeConfig;
 	esm?: EsmConfig;
+	/** Force the modal's color scheme. Default `auto` (follow the OS). */
+	theme?: X402Theme;
+	/** Flat map of `--x402-*` design tokens to brand-match at runtime, e.g. `{ '--x402-accent': '#ff5c00' }`. */
+	cssVars?: Record<string, string> | null;
 }
 
 /**

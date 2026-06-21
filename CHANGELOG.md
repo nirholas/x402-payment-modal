@@ -3,6 +3,51 @@
 All notable changes to `@three-ws/x402-payment-modal` are documented here. This
 project adheres to [Semantic Versioning](https://semver.org).
 
+## 1.2.0
+
+Hardening pass for scale and a UX/accessibility overhaul.
+
+### Fixed
+
+- **$THREE (and any Token-2022 mint) now settles.** `prepareSolanaCheckout`
+  hardcoded the legacy SPL Token program, so building a $THREE payment threw
+  `TokenInvalidAccountOwnerError`. The server now detects each mint's owning
+  program (legacy vs Token-2022) and derives ATAs, the idempotent-create, and
+  `transferChecked` against the right one.
+
+### Added — reliability & scale
+
+- **RPC failover** — `prepareSolanaCheckout` / `handleCheckout` accept `rpcUrls`
+  (and `devnetRpcUrls`); each is tried in order on a transient RPC error.
+  Connections are reused per URL, and unset RPC now warns (the public RPC is a
+  load footgun).
+- **Faster, cheaper prepare** — the independent RPC reads (decimals, recipient
+  ATA existence, blockhash) run in parallel; USDC/THREE/wSOL decimals + program
+  are short-circuited; recipient-ATA existence and mint metadata are cached
+  (LRU-bounded). Cluster-scoped caches survive RPC failover.
+- **Resilient crypto-helper loading** — the on-demand `@solana/web3.js` /
+  `@noble/hashes` import now falls back across multiple independent CDNs with a
+  per-attempt timeout, and is pre-warmed when the modal opens. A single CDN
+  outage no longer breaks Solana payments. Set `configure({ esm })` to self-host.
+- **Idempotency key** — one key per payment, reused across every retry and "Try
+  again", sent as `Idempotency-Key` so a re-sent payment settles at most once.
+- Unexpected checkout failures are now logged (root cause) instead of collapsing
+  silently into a generic 502; pass `options.logger` to route them.
+
+### Added — UX, UI & accessibility
+
+- **Design-token theming** — the full palette is exposed as `--x402-*` CSS custom
+  properties. `configure({ theme: 'light'|'dark'|'auto', cssVars, brand: { logo } })`
+  forces a color scheme, brand-matches tokens at runtime, and shows a header logo.
+- **Accessibility** — focus trap + focus restore, `aria-live` step announcements,
+  `:focus-visible` rings, `prefers-reduced-motion` support, and WCAG-AA contrast.
+- **Polish** — crisp inline SVG icons (close, lock, wallet, success check),
+  an animated success receipt, step cross-fade, shimmer skeletons during
+  discovery, a mobile bottom-sheet layout with safe-area insets, humanized error
+  copy (no internal step ids), an install-a-wallet hint when none is detected,
+  a "you authorize exactly X — nothing more" trust line, and prose rendering for
+  string results.
+
 ## 1.1.0
 
 ### Added
