@@ -15,9 +15,12 @@ import { handleCheckout } from './checkout.js';
 
 /**
  * @param {object} [options]
- * @param {string} [options.rpcUrl]        Solana mainnet RPC URL
- * @param {string} [options.devnetRpcUrl]  Solana devnet RPC URL
- * @param {string} [options.origin]        Access-Control-Allow-Origin (default '*')
+ * @param {string}   [options.rpcUrl]        Solana mainnet RPC URL
+ * @param {string[]} [options.rpcUrls]       Solana mainnet RPC URLs for failover (preferred under load)
+ * @param {string}   [options.devnetRpcUrl]  Solana devnet RPC URL
+ * @param {string[]} [options.devnetRpcUrls] Solana devnet RPC URLs for failover
+ * @param {Function} [options.logger]        called with the root cause on unexpected failures
+ * @param {string}   [options.origin]        Access-Control-Allow-Origin (default '*')
  * @returns {import('express').RequestHandler}
  */
 export function x402CheckoutRouter(options = {}) {
@@ -25,7 +28,7 @@ export function x402CheckoutRouter(options = {}) {
 	return async function x402CheckoutHandler(req, res) {
 		res.setHeader('Access-Control-Allow-Origin', allowOrigin);
 		res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-		res.setHeader('Access-Control-Allow-Headers', 'content-type');
+		res.setHeader('Access-Control-Allow-Headers', 'content-type, x-idempotency-key');
 		if (req.method === 'OPTIONS') {
 			res.status(204).end();
 			return;
