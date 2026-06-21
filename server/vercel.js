@@ -27,7 +27,7 @@ async function readJsonBody(req) {
 }
 
 /**
- * @param {object} [options]  { rpcUrl, devnetRpcUrl, origin }
+ * @param {object} [options]  { rpcUrl, rpcUrls, devnetRpcUrl, devnetRpcUrls, logger, origin }
  * @returns {(req: any, res: any) => Promise<void>}
  */
 export function createVercelCheckoutHandler(options = {}) {
@@ -35,7 +35,7 @@ export function createVercelCheckoutHandler(options = {}) {
 	return async function handler(req, res) {
 		res.setHeader('Access-Control-Allow-Origin', allowOrigin);
 		res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-		res.setHeader('Access-Control-Allow-Headers', 'content-type');
+		res.setHeader('Access-Control-Allow-Headers', 'content-type, x-idempotency-key');
 		if (req.method === 'OPTIONS') {
 			res.status(204).end();
 			return;

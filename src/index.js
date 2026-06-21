@@ -58,14 +58,32 @@ const CONFIG = {
 	// ERC-8021 builder-code self-attribution echoed back when the 402 challenge
 	// declares a builder-code extension. Set either field to '' to disable it.
 	builderCode: { wallet: '3d_agent', service: '3d_agent_modal' },
-	// CDN URLs for the crypto helpers loaded on demand (only when a Solana or an
-	// EVM sign-in payment is actually attempted). Repoint these at a self-hosted
-	// mirror to satisfy a strict Content-Security-Policy.
+	// Primary CDN URLs for the crypto helpers loaded on demand (only when a Solana
+	// or EVM sign-in payment is actually attempted). Each is tried first, then the
+	// loader falls back across additional independent CDNs (see ESM_FALLBACKS) so a
+	// single CDN outage during a traffic spike can't break payments. Repoint these
+	// at a self-hosted mirror to satisfy a strict Content-Security-Policy — your URL
+	// is always tried first.
 	esm: {
 		solanaWeb3: 'https://esm.sh/@solana/web3.js@1.95.3?bundle',
 		nobleHashesSha3: 'https://esm.sh/@noble/hashes@1.4.0/sha3?bundle',
 	},
 };
+
+// Independent CDN fallbacks tried (in order, after the configured primary) if the
+// primary is slow or down. Three uncorrelated providers ≈ no single point of
+// failure for the dynamic crypto-helper import that the Solana path depends on.
+const ESM_FALLBACKS = {
+	solanaWeb3: [
+		'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.3/+esm',
+		'https://cdn.skypack.dev/@solana/web3.js@1.95.3',
+	],
+	nobleHashesSha3: [
+		'https://cdn.jsdelivr.net/npm/@noble/hashes@1.4.0/sha3/+esm',
+		'https://cdn.skypack.dev/@noble/hashes@1.4.0/sha3',
+	],
+};
+const ESM_IMPORT_TIMEOUT_MS = 12_000;
 
 /**
  * Merge caller overrides into CONFIG. Shallow-merges the nested `brand`,
@@ -456,7 +474,7 @@ function base58encode(bytes) {
 let _evmChecksum = null;
 async function loadEvmChecksum() {
 	if (_evmChecksum) return _evmChecksum;
-	const sha3 = await import(/* @vite-ignore */ CONFIG.esm.nobleHashesSha3);
+	const sha3 = await importWithFallback(CONFIG.esm.nobleHashesSha3, ESM_FALLBACKS.nobleHashesSha3, '@noble/hashes/sha3');
 	const keccak = sha3.keccak_256;
 	_evmChecksum = (addr) => {
 		const a = String(addr).toLowerCase().replace(/^0x/, '');
@@ -1107,6 +1125,9 @@ class CheckoutModal {
 
 	async start() {
 		this.bodyEl.innerHTML = this.renderSteps('discover');
+		// Pre-warm the Solana web3 import now (while the user reads the modal and we
+		// fetch the challenge) so a slow CDN doesn't stall at sign time. Best-effort.
+		loadSolanaWeb3().catch(() => {});
 		try {
 			const challenge = await discoverChallenge(this.opts);
 			this.challenge = challenge;
@@ -1586,12 +1607,35 @@ function randomHex(bytes) {
 	return Array.from(arr).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Try the configured primary URL, then each independent CDN fallback, racing
+// every attempt against a timeout so a hung CDN doesn't stall the payment — it
+// just moves on to the next. Returns the first module that imports; throws only
+// if every candidate fails.
+async function importWithFallback(primary, fallbacks, label) {
+	const seen = new Set();
+	const candidates = [primary, ...fallbacks].filter((u) => u && !seen.has(u) && seen.add(u));
+	let lastErr;
+	for (const url of candidates) {
+		try {
+			return await Promise.race([
+				import(/* @vite-ignore */ url),
+				new Promise((_, reject) =>
+					setTimeout(() => reject(new Error(`timed out loading ${label} from ${url}`)), ESM_IMPORT_TIMEOUT_MS),
+				),
+			]);
+		} catch (err) {
+			lastErr = err;
+		}
+	}
+	throw lastErr || new Error(`could not load ${label} from any CDN`);
+}
+
 let _solanaWeb3 = null;
 async function loadSolanaWeb3() {
 	if (_solanaWeb3) return _solanaWeb3;
-	// Dynamic import from esm.sh keeps the drop-in script tiny — Solana web3.js
-	// is only fetched when a Solana payment is actually attempted.
-	_solanaWeb3 = await import(/* @vite-ignore */ CONFIG.esm.solanaWeb3);
+	// Loaded on demand (only when a Solana payment is attempted) and cached. The
+	// fallback chain means one CDN being down doesn't break Solana checkout.
+	_solanaWeb3 = await importWithFallback(CONFIG.esm.solanaWeb3, ESM_FALLBACKS.solanaWeb3, '@solana/web3.js');
 	return _solanaWeb3;
 }
 
