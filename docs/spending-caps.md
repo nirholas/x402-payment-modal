@@ -61,7 +61,7 @@ payment is verified and settled.
 ## Worked example
 
 ```js
-import { pay } from '@three-ws/x402-payment-modal';
+import { pay } from '@nirholas/x402-payment-modal';
 
 // USDC, so atomic micro-USD caps apply directly:
 //   0.10 USDC per call, 2.00 USDC/hour, 10.00 USDC/day

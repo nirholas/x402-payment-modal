@@ -1,5 +1,5 @@
 // Runnable demo: a free crypto-price API paywalled with x402 on Solana, served
-// to the @three-ws/x402-payment-modal you ship on npm.
+// to the @nirholas/x402-payment-modal you ship on npm.
 //
 // What it proves end-to-end:
 //   1. The published modal (loaded from unpkg in public/index.html) drives the
@@ -10,15 +10,15 @@
 //      a source constant. Start the server, paste your address, then pay.
 //
 // The only "config" that isn't runtime is the facilitator's fee-payer sponsor
-// (a PUBLIC Solana account, not a secret) and the CoinGecko/PayAI URLs.
+// (a PUBLIC Solana account, not a secret) and the CoinGecko/facilitator URLs.
 //
-// Run (from inside the three.ws repo — uses the repo's express + @solana deps):
-//   node x402-payment-modal/examples/solana-crypto-paywall/server.mjs
+// Run (from inside this package's repo — uses the repo's express + @solana deps):
+//   node examples/solana-crypto-paywall/server.mjs
 //   open http://localhost:4021
 //
 // As a standalone project (outside this repo): `npm install`, then change the
-// two relative imports below to '@three-ws/x402-payment-modal/server/express'
-// and '@three-ws/x402-payment-modal/server'.
+// two relative imports below to '@nirholas/x402-payment-modal/server/express'
+// and '@nirholas/x402-payment-modal/server'.
 
 import express from 'express';
 import { fileURLToPath } from 'node:url';
@@ -40,10 +40,10 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 4021;
 
-// PayAI's facilitator co-signs Solana settlements as the fee payer. This is the
-// three.ws default sponsor — a PUBLIC pubkey (it pays the SOL network fee so the
-// buyer needs only USDC), NOT a secret and NOT the payout wallet. Override only
-// if you point X402_FACILITATOR_URL at a facilitator with a different sponsor.
+// The facilitator co-signs Solana settlements as the fee payer. The default
+// below is a PUBLIC sponsor pubkey (it pays the SOL network fee so the buyer
+// needs only USDC), NOT a secret and NOT the payout wallet. Override it with
+// X402_FEE_PAYER_SOLANA to point at the sponsor of whichever facilitator you use.
 const FEE_PAYER = process.env.X402_FEE_PAYER_SOLANA || '2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4';
 
 // A public Solana RPC works for a quick try (rate-limited). Pass a dedicated RPC
@@ -273,7 +273,7 @@ app.listen(PORT, () => {
 	console.log(`  ▸ paid endpoint   POST /api/paid/crypto`);
 	console.log(`  ▸ checkout router /api/x402-checkout (prepare + encode)`);
 	console.log(`  ▸ payout wallet   set it at runtime in the page (POST /api/config)`);
-	console.log(`  ▸ fee payer       ${FEE_PAYER} (public PayAI sponsor)`);
+	console.log(`  ▸ fee payer       ${FEE_PAYER} (public facilitator sponsor)`);
 	console.log(`  ▸ Solana RPC      ${SOLANA_RPC_URL}`);
 	console.log('');
 });

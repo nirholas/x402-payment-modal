@@ -1,7 +1,7 @@
 // Express adapter for the Solana checkout endpoints.
 //
 //   import express from 'express';
-//   import { x402CheckoutRouter } from '@three-ws/x402-payment-modal/server/express';
+//   import { x402CheckoutRouter } from '@nirholas/x402-payment-modal/server/express';
 //
 //   const app = express();
 //   app.use(express.json());

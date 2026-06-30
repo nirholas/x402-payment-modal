@@ -18,7 +18,7 @@ import {
   X402_VERSION,             // 2
   NETWORK_SOLANA_MAINNET,
   NETWORK_SOLANA_DEVNET,
-} from '@three-ws/x402-payment-modal/server';
+} from '@nirholas/x402-payment-modal/server';
 ```
 
 ## Why EVM needs no server, but Solana does
@@ -57,7 +57,7 @@ You may also pass `rpcUrl` (and `devnetRpcUrl`) explicitly to the adapters or to
 
 ```js
 import express from 'express';
-import { x402CheckoutRouter } from '@three-ws/x402-payment-modal/server/express';
+import { x402CheckoutRouter } from '@nirholas/x402-payment-modal/server/express';
 
 const app = express();
 app.use(express.json());
@@ -85,7 +85,7 @@ handler:
 
 ```js
 // api/x402-checkout.js
-import { createVercelCheckoutHandler } from '@three-ws/x402-payment-modal/server/vercel';
+import { createVercelCheckoutHandler } from '@nirholas/x402-payment-modal/server/vercel';
 
 export default createVercelCheckoutHandler({
   rpcUrl: process.env.SOLANA_RPC_URL,
@@ -99,7 +99,7 @@ zero-config form works too:
 
 ```js
 // api/x402-checkout.js
-export { default } from '@three-ws/x402-payment-modal/server/vercel';
+export { default } from '@nirholas/x402-payment-modal/server/vercel';
 ```
 
 Like the Express adapter, it applies permissive CORS by default, handles
@@ -120,7 +120,7 @@ fields (`signed_tx_base64`/`signedTxBase64`, `resource_url`/`resourceUrl`,
 
 ```js
 import { createServer } from 'node:http';
-import { handleCheckout } from '@three-ws/x402-payment-modal/server';
+import { handleCheckout } from '@nirholas/x402-payment-modal/server';
 
 const server = createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');

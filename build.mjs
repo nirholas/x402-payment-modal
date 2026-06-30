@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build script for @three-ws/x402-payment-modal.
+ * Build script for @nirholas/x402-payment-modal.
  *
  * The source (src/index.js) is already a standalone, dependency-free ES module:
  * the only imports it performs are runtime `import()` of pinned esm.sh URLs, made

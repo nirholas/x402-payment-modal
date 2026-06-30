@@ -1,4 +1,4 @@
-// Type definitions for @three-ws/x402-payment-modal/server
+// Type definitions for @nirholas/x402-payment-modal/server
 
 /** One x402 `accept` entry (scheme "exact", Solana network). */
 export interface SolanaAccept {
@@ -47,7 +47,8 @@ export const NETWORK_SOLANA_DEVNET: string;
 
 /** Solana USDC mint (mainnet). */
 export const USDC_MINT_SOLANA: string;
-/** $THREE — the three.ws utility token mint. */
+/** THREE — an optional opt-in SPL token mint (used only when an endpoint
+ *  chooses to accept it alongside USDC). */
 export const THREE_MINT: string;
 
 export interface WellKnownToken {

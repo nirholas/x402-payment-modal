@@ -20,7 +20,7 @@ npm install @solana/web3.js @solana/spl-token
 
 ```js
 import express from 'express';
-import { x402CheckoutRouter } from '@three-ws/x402-payment-modal/server/express';
+import { x402CheckoutRouter } from '@nirholas/x402-payment-modal/server/express';
 
 const app = express();
 app.use(express.json());
@@ -30,16 +30,16 @@ app.use('/api/x402-checkout', x402CheckoutRouter({ rpcUrl: process.env.SOLANA_RP
 **Vercel / Next.js** — `api/x402-checkout.js`
 
 ```js
-export { default } from '@three-ws/x402-payment-modal/server/vercel';
+export { default } from '@nirholas/x402-payment-modal/server/vercel';
 // or, with options:
-// import { createVercelCheckoutHandler } from '@three-ws/x402-payment-modal/server/vercel';
+// import { createVercelCheckoutHandler } from '@nirholas/x402-payment-modal/server/vercel';
 // export default createVercelCheckoutHandler({ rpcUrl: process.env.SOLANA_RPC_URL });
 ```
 
 **Anything else** — use the core router:
 
 ```js
-import { handleCheckout } from '@three-ws/x402-payment-modal/server';
+import { handleCheckout } from '@nirholas/x402-payment-modal/server';
 
 const { status, body } = await handleCheckout({
   action: url.searchParams.get('action'), // 'prepare' | 'encode'

@@ -1,5 +1,5 @@
 /**
- * <X402Button> — a thin React wrapper around @three-ws/x402-payment-modal.
+ * <X402Button> — a thin React wrapper around @nirholas/x402-payment-modal.
  *
  * The package is a browser-only ES module (it renders a modal and talks to a
  * wallet), so we dynamically import it INSIDE the click handler. That keeps the
@@ -48,7 +48,7 @@ export default function X402Button({
 
     try {
       // Dynamic import keeps the browser-only module out of the SSR bundle.
-      const { pay } = await import('@three-ws/x402-payment-modal');
+      const { pay } = await import('@nirholas/x402-payment-modal');
 
       const result = await pay({
         endpoint,

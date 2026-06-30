@@ -1,12 +1,12 @@
 # React example — `<X402Button>`
 
 A drop-in React component that wraps `pay()` from
-[`@three-ws/x402-payment-modal`](https://www.npmjs.com/package/@three-ws/x402-payment-modal).
+[`@nirholas/x402-payment-modal`](https://www.npmjs.com/package/@nirholas/x402-payment-modal).
 
 ## Install
 
 ```bash
-npm i @three-ws/x402-payment-modal
+npm i @nirholas/x402-payment-modal
 ```
 
 ## Use it
@@ -53,7 +53,7 @@ The package is browser-only (it renders a modal and connects to a wallet), so
 `X402Button` imports it lazily **inside the click handler**:
 
 ```js
-const { pay } = await import('@three-ws/x402-payment-modal');
+const { pay } = await import('@nirholas/x402-payment-modal');
 ```
 
 Nothing from the package runs during render or on the server, so the component

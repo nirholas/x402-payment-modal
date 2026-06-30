@@ -1,4 +1,4 @@
-// @three-ws/x402-payment-modal/server — Solana checkout helpers.
+// @nirholas/x402-payment-modal/server — Solana checkout helpers.
 //
 // The modal's EVM path signs EIP-3009 typed-data entirely in the browser and
 // never calls your server. The Solana path is different: Phantom only *signs*
@@ -14,7 +14,7 @@
 //
 // Runtime deps: @solana/web3.js and @solana/spl-token (declared as optional peer
 // dependencies — install them in the app that mounts this handler). Nothing here
-// imports anything three.ws-specific.
+// is host-specific — it runs unchanged behind any paid endpoint.
 
 import {
 	Connection,
@@ -43,11 +43,11 @@ const DEFAULT_MAINNET_RPC = 'https://api.mainnet-beta.solana.com';
 const DEFAULT_DEVNET_RPC = 'https://api.devnet.solana.com';
 
 // ─────────────────────────────────────────────── Well-known Solana tokens ────
-// The two settlement assets the modal treats as first-class on Solana. USDC is
-// the universal dollar-stable rail; THREE is the three.ws utility token, so any
-// endpoint can let holders pay in THREE alongside USDC. `solanaAccept()` builds
-// the x402 `accept` entry for either (or any other SPL mint) — the prepare path
-// already transfers any mint, so offering THREE needs no further wiring.
+// USDC is the always-on default settlement asset on Solana — the universal
+// dollar-stable rail. THREE is an optional opt-in SPL token an endpoint can
+// accept alongside USDC. `solanaAccept()` builds the x402 `accept` entry for
+// either (or any other SPL mint) — the prepare path transfers any mint, so
+// offering an extra token needs no further wiring.
 export const USDC_MINT_SOLANA = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 export const THREE_MINT = 'FeMbDoX7R1Psc4GEcvJdsbNbZA3bfztcyDCatJVJpump';
 

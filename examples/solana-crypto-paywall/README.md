@@ -1,4 +1,4 @@
-# Solana crypto paywall — `@three-ws/x402-payment-modal` demo
+# Solana crypto paywall — `@nirholas/x402-payment-modal` demo
 
 A complete, runnable demo that paywalls a **free crypto-price API** (CoinGecko)
 behind an **x402 USDC payment on Solana**, served to the payment modal we ship on
@@ -12,7 +12,7 @@ click ─▶ 402 challenge ─▶ Phantom connect ─▶ sign SPL transfer
 Three things make it a real test, not a mock:
 
 1. **The modal loads from npm.** `public/index.html` pulls
-   `https://unpkg.com/@three-ws/x402-payment-modal@1.1.0` — the exact artifact we
+   `https://unpkg.com/@nirholas/x402-payment-modal@1.2.0` — the exact artifact we
    publish — so you're testing the shipped code, not local source.
 2. **The data is gated for real.** `/api/paid/crypto` returns live CoinGecko
    prices **only** after the payment verifies *and* settles on-chain via the
@@ -21,13 +21,13 @@ Three things make it a real test, not a mock:
    constant for it — you start the server, paste a Solana address into the page,
    and that address becomes the `payTo` in the 402 challenge.
 
-## Run it (inside the three.ws repo)
+## Run it (inside this package's repo)
 
 The server reuses the repo's `express` + `@solana/*` and imports the package's
 checkout helpers from source, so no install is needed:
 
 ```bash
-node x402-payment-modal/examples/solana-crypto-paywall/server.mjs
+node examples/solana-crypto-paywall/server.mjs
 # ▸ open http://localhost:4021
 ```
 
@@ -46,8 +46,8 @@ Then in the page:
 ```bash
 npm install
 # in server.mjs, change the two relative imports to the package subpaths:
-#   '../../server/express.js'  →  '@three-ws/x402-payment-modal/server/express'
-#   '../../server/checkout.js' →  '@three-ws/x402-payment-modal/server'
+#   '../../server/express.js'  →  '@nirholas/x402-payment-modal/server/express'
+#   '../../server/checkout.js' →  '@nirholas/x402-payment-modal/server'
 npm start
 ```
 
@@ -75,7 +75,7 @@ npm start
 
 - `server.mjs` — Express app: runtime config, the 402 → verify → fetch → settle
   paid endpoint, and the package's checkout router.
-- `facilitator.mjs` — minimal PayAI `/verify` + `/settle` client (the merchant
-  half of the protocol), mirroring the wire format `api/_lib/x402-spec.js` uses.
+- `facilitator.mjs` — minimal x402 `/verify` + `/settle` facilitator client (the
+  merchant half of the protocol), implementing the standard x402 v2 wire format.
 - `public/index.html` — the demo page: runtime payout panel, coin picker, and
   designed loading / empty / error / populated states with an on-chain receipt.

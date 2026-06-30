@@ -85,7 +85,7 @@ light look everywhere:
 Load this **after** the module so it wins:
 
 ```html
-<script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
+<script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
 <style>
   /* Rounder card */
   .x402-modal {

@@ -1,9 +1,9 @@
-// @three-ws/x402-payment-modal — drop-in payment modal for any x402 endpoint.
+// @nirholas/x402-payment-modal — drop-in payment modal for any x402 endpoint.
 //
 // A single, dependency-free ES module. Drop it on any page and any element with
 // `data-x402-endpoint` opens a payment modal on click:
 //
-//   <script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
+//   <script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
 //
 //   <button
 //     data-x402-endpoint="https://example.com/api/paid/summarize"
@@ -18,7 +18,7 @@
 //
 // You can also call programmatically:
 //
-//   import { pay, configure } from '@three-ws/x402-payment-modal';
+//   import { pay, configure } from '@nirholas/x402-payment-modal';
 //   const out = await pay({
 //     endpoint: '/api/paid/summarize',
 //     body: { text: 'hello' },
@@ -41,8 +41,9 @@ const VERSION = '1.2.0';
 
 // ─────────────────────────────────────────────────────────── configuration ───
 // All host-specific knobs live here so the modal runs unchanged on any site.
-// Defaults match the three.ws hosted instance; override with configure() or via
-// `data-*` attributes on the <script> tag (read once at load by readScriptConfig).
+// The defaults below settle a 402 from ANY origin with zero config; override with
+// configure() or via `data-*` attributes on the <script> tag (read once at load
+// by readScriptConfig).
 const CONFIG = {
 	// Origin that serves the Solana checkout endpoints
 	// (`/api/x402-checkout?action=prepare|encode`). `null` → resolve from this
@@ -52,13 +53,16 @@ const CONFIG = {
 	// Path of the checkout endpoint on `checkoutOrigin`. Override if you mount
 	// the server handler somewhere other than /api/x402-checkout.
 	checkoutPath: '/api/x402-checkout',
-	// Footer attribution shown in the modal.
-	brand: { name: 'three.ws', url: 'https://three.ws' },
+	// Footer attribution shown in the modal. Both fields default to null so no
+	// "Powered by" link renders until a host opts in via
+	// configure({ brand: { name, url } }).
+	brand: { name: null, url: null },
 	// Small text on the left of the footer.
 	footerNote: 'x402 · onchain settled',
 	// ERC-8021 builder-code self-attribution echoed back when the 402 challenge
-	// declares a builder-code extension. Set either field to '' to disable it.
-	builderCode: { wallet: '3d_agent', service: '3d_agent_modal' },
+	// declares a builder-code extension. Empty by default — no self-attribution
+	// unless a host opts in via configure({ builderCode: { wallet, service } }).
+	builderCode: { wallet: '', service: '' },
 	// Color scheme: 'auto' follows the OS; 'light'/'dark' force it.
 	theme: 'auto',
 	// Optional flat map of --x402-* design tokens for brand-matching at runtime.
@@ -167,12 +171,11 @@ function normalizeAccept(accept) {
 // ─────────────────────────────────────────────── Well-known Solana tokens ────
 // Mints the modal recognizes on sight, so a 402 `accept` can omit
 // `extra.name`/`extra.decimals` and still render with the correct symbol,
-// decimals, and branding. Two settlement assets are first-class on Solana:
-//   • USDC — the universal dollar-stable rail.
-//   • THREE — the three.ws utility token. Holders can pay any x402 endpoint
-//     that opts into accepting it, right alongside USDC. See three.ws/three-token.
-// A merchant offers THREE simply by adding a Solana `accept` whose `asset` is
-// THREE_MINT (the server checkout transfers any SPL mint, so no extra wiring).
+// decimals, and branding. USDC is the always-on default settlement asset on
+// Solana — the universal dollar-stable rail. THREE is an optional opt-in SPL
+// token a merchant can accept alongside USDC: add a Solana `accept` whose
+// `asset` is THREE_MINT and the server checkout transfers it like any other
+// mint (no extra wiring). The modal works fully without ever touching THREE.
 export const USDC_MINT_SOLANA = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 export const THREE_MINT = 'FeMbDoX7R1Psc4GEcvJdsbNbZA3bfztcyDCatJVJpump';
 
@@ -364,10 +367,11 @@ function browserRollbackReservation(reservation) {
 }
 
 // ──────────────────────────────────────────── ERC-8021 builder-code echo ────
-// The server-side x402-spec.js enforces that any client-echoed builder-code
+// A server that supports ERC-8021 enforces that any client-echoed builder-code
 // `a` matches what the 402 challenge declared (anti-tamper). Builders/wallets
-// can append their own service code in `s` and set their wallet code `w`
-// — for our own demo modal we self-attribute `w: "3d_agent"` and `s: ["3d_agent_modal"]`.
+// can append their own service code in `s` and set their wallet code `w`. Both
+// are empty by default, so the modal echoes nothing extra; a host opts into
+// self-attribution via configure({ builderCode: { wallet, service } }).
 
 const BUILDER_CODE_KEY = 'builder-code';
 const BUILDER_CODE_PATTERN = /^[a-z0-9_]{1,32}$/;

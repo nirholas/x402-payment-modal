@@ -1,4 +1,4 @@
-// Type definitions for @three-ws/x402-payment-modal
+// Type definitions for @nirholas/x402-payment-modal
 
 /** Client-side spending caps, enforced in localStorage before each payment. */
 export interface SpendingCaps {
@@ -116,8 +116,10 @@ export const version: string;
 
 /** Solana USDC mint (mainnet). */
 export const USDC_MINT_SOLANA: string;
-/** $THREE — the three.ws utility token mint. Recognized by the modal so a 402
- *  `accept` using it renders as THREE without merchant-supplied metadata. */
+/** THREE — an optional opt-in SPL token mint recognized by the modal so a 402
+ *  `accept` using it renders as THREE without merchant-supplied metadata. USDC
+ *  remains the always-on default; this token is used only when an endpoint
+ *  chooses to accept it. */
 export const THREE_MINT: string;
 
 export interface KnownSolanaToken {

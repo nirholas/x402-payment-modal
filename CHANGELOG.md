@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `@three-ws/x402-payment-modal` are documented here. This
+All notable changes to `@nirholas/x402-payment-modal` are documented here. This
 project adheres to [Semantic Versioning](https://semver.org).
 
 ## 1.2.0
@@ -9,8 +9,8 @@ Hardening pass for scale and a UX/accessibility overhaul.
 
 ### Fixed
 
-- **$THREE (and any Token-2022 mint) now settles.** `prepareSolanaCheckout`
-  hardcoded the legacy SPL Token program, so building a $THREE payment threw
+- **Token-2022 mints now settle.** `prepareSolanaCheckout`
+  hardcoded the legacy SPL Token program, so building a Token-2022 payment threw
   `TokenInvalidAccountOwnerError`. The server now detects each mint's owning
   program (legacy vs Token-2022) and derives ATAs, the idempotent-create, and
   `transferChecked` against the right one.
@@ -27,7 +27,7 @@ Hardening pass for scale and a UX/accessibility overhaul.
 ### Added — developer experience
 
 - **First-class React export** — `import { X402Button, useX402 } from
-  '@three-ws/x402-payment-modal/react'`. `useX402()` exposes a
+  '@nirholas/x402-payment-modal/react'`. `useX402()` exposes a
   `{ pay, status, result, error, reset, isPaying }` state machine; both are
   SSR-safe (the browser-only core is dynamically imported on first use). `react`
   is an optional peer dependency.
@@ -69,11 +69,11 @@ Hardening pass for scale and a UX/accessibility overhaul.
 
 ### Added
 
-- **Pay in USDC _or_ THREE on Solana.** When a 402 challenge offers more than one
+- **Multi-token Solana picker.** When a 402 challenge offers more than one
   Solana token, the modal renders a token picker so the buyer chooses which to
   pay in; the headline price and the built transaction follow the choice. USDC
-  and [$THREE](https://three.ws/three-token) (`FeMb…pump`) are recognized by mint
-  — correct symbol, decimals, and branding even when the `accept` omits
+  is the always-on default; an optional opt-in `THREE` token is recognized by
+  mint — correct symbol and decimals even when the `accept` omits
   `extra.name`/`extra.decimals`.
 - **`solanaAccept()` server helper** — build a spec-shaped Solana `accept` from
   `token: 'usdc' | 'three'` (or an explicit `mint`) with the price as `uiAmount`
@@ -84,15 +84,15 @@ Hardening pass for scale and a UX/accessibility overhaul.
 
 ### Notes
 
-- THREE is a utility token, not a stablecoin: the browser can't dollar-denominate
-  it, so client-side spending caps apply to USDC only — enforce THREE caps
-  server-side. Settlement is unchanged — the checkout endpoint already transfers
-  any SPL mint named by the chosen `accept`.
+- For any non-stable token (such as the optional `THREE`), the browser can't
+  dollar-denominate the price, so client-side spending caps apply to stablecoins
+  only — enforce caps for non-stable tokens server-side. Settlement is unchanged
+  — the checkout endpoint already transfers any SPL mint named by the chosen
+  `accept`.
 
 ## 1.0.0
 
-Initial public release. Extracted from the three.ws platform as a standalone,
-dependency-free package.
+Initial public release as a standalone, dependency-free package.
 
 ### Added
 
@@ -109,7 +109,7 @@ dependency-free package.
 - **`configure()` + script-tag `data-*` config** for checkout origin, branding,
   builder-code attribution, and esm.sh CDN URLs.
 - **Framework-agnostic server module** with Express and Vercel adapters
-  (`@three-ws/x402-payment-modal/server`).
+  (`@nirholas/x402-payment-modal/server`).
 - **Theming** — light + automatic dark mode, all classes overridable, `--x402-z`
   z-index custom property.
 - **Automatic 429 throttle retry** — re-sends the same signed payment up to twice

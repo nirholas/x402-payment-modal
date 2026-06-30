@@ -1,6 +1,6 @@
 # Architecture
 
-`@three-ws/x402-payment-modal` is a single zero-dependency vanilla-JS ES module
+`@nirholas/x402-payment-modal` is a single zero-dependency vanilla-JS ES module
 that turns any [x402](https://x402.org)-protected HTTP endpoint into a one-click
 checkout. It owns the entire client lifecycle: discovering the payment challenge,
 connecting a wallet, signing the payment, retrying the request with proof, and
@@ -168,4 +168,4 @@ rolled back. Callers should treat `cancelled` as a no-op, not a failure.
   noble hashes) are loaded on demand from CDN ESM and can be repointed for
   strict CSP via [`configure`](./api-reference.md#configure).
 - **Server:** optional, only for the Solana rail. Exposed at
-  `@three-ws/x402-payment-modal/server` with Express and Vercel adapters.
+  `@nirholas/x402-payment-modal/server` with Express and Vercel adapters.

@@ -1,5 +1,5 @@
 {
-	"name": "@three-ws/x402-payment-modal",
+	"name": "@nirholas/x402-payment-modal",
 	"version": "1.2.0",
 	"description": "Drop-in x402 payment modal for any paid HTTP endpoint. One ES module, zero runtime dependencies — handles wallet connect (Phantom/Solana + EVM via EIP-3009), the 402 → sign → settle flow, SIWX re-entry, client-side spending caps, and a receipt. Vanilla JS, no bundler required.",
 	"type": "module",
@@ -77,12 +77,11 @@
 		"modal",
 		"agentic",
 		"web3",
-		"402",
-		"three-ws"
+		"402"
 	],
-	"author": "three.ws <support@three.ws> (https://three.ws)",
+	"author": "nirholas",
 	"license": "Apache-2.0",
-	"homepage": "https://three.ws",
+	"homepage": "https://github.com/nirholas/x402-payment-modal#readme",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/nirholas/x402-payment-modal.git"

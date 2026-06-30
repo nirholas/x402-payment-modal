@@ -1,7 +1,7 @@
 # Tutorial: ship a paid endpoint with x402
 
 This walks you from an empty folder to a working page where a user pays USDC to
-call your API — using `@three-ws/x402-payment-modal` for the front end. It takes
+call your API — using `@nirholas/x402-payment-modal` for the front end. It takes
 about 15 minutes.
 
 By the end you'll have:
@@ -42,7 +42,7 @@ Create `index.html`:
 
     <pre id="out"></pre>
 
-    <script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
+    <script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
     <script>
       const out = document.getElementById('out');
       const btn = document.getElementById('summarize');
@@ -151,7 +151,7 @@ npm install @solana/web3.js @solana/spl-token
 ```
 
 ```js
-import { x402CheckoutRouter } from '@three-ws/x402-payment-modal/server/express';
+import { x402CheckoutRouter } from '@nirholas/x402-payment-modal/server/express';
 
 app.use(
   '/api/x402-checkout',
@@ -164,7 +164,7 @@ The modal automatically POSTs to `/api/x402-checkout?action=prepare` and
 different origin, tell the modal:
 
 ```js
-import { configure } from '@three-ws/x402-payment-modal';
+import { configure } from '@nirholas/x402-payment-modal';
 configure({ checkoutOrigin: 'https://pay.acme.com' });
 ```
 

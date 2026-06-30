@@ -1,4 +1,4 @@
-# @three-ws/x402-payment-modal
+# @nirholas/x402-payment-modal
 
 **A drop-in payment modal for any [x402](https://x402.org) paid endpoint.** One ES
 module, zero runtime dependencies. It turns an HTTP `402 Payment Required`
@@ -8,7 +8,7 @@ SIWX re-entry, client-side spending caps, and a receipt — vanilla JS, no bundl
 required.
 
 ```html
-<script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
+<script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
 
 <button
   data-x402-endpoint="https://api.example.com/paid/summarize"
@@ -41,10 +41,11 @@ throttle retries, and the receipt, so you ship a paid endpoint in minutes.
 - **Solana + EVM.** Phantom (Solana) and any injected EVM wallet (Base USDC
   via EIP-3009 `transferWithAuthorization`). The modal picks the right path from
   the 402 challenge.
-- **Pay in USDC _or_ THREE on Solana.** Offer both and the buyer gets a token
-  picker — pay in USDC, or in [$THREE](https://three.ws/three-token), the three.ws
-  utility token, recognized on sight (symbol, decimals, branding). See
-  [Accepting multiple Solana tokens](#accepting-multiple-solana-tokens-usdc--three).
+- **USDC by default, multi-token if you want it.** USDC is the always-on default
+  on Solana. Optionally offer a second SPL token (the modal ships a built-in
+  `THREE` opt-in) and the buyer gets a token picker — each token is recognized on
+  sight (symbol, decimals). See
+  [Accepting multiple Solana tokens](#accepting-multiple-solana-tokens).
 - **SIWX re-entry.** If a wallet already paid for a resource, it can sign back in
   instead of paying again. See [docs/siwx.md](docs/siwx.md).
 - **Spending caps.** Optional per-call / hourly / daily caps enforced in the
@@ -60,17 +61,17 @@ throttle retries, and the receipt, so you ship a paid endpoint in minutes.
 **Via CDN (no build step):**
 
 ```html
-<script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
+<script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
 ```
 
 **Via npm (bundler / framework):**
 
 ```bash
-npm install @three-ws/x402-payment-modal
+npm install @nirholas/x402-payment-modal
 ```
 
 ```js
-import { pay, configure } from '@three-ws/x402-payment-modal';
+import { pay, configure } from '@nirholas/x402-payment-modal';
 ```
 
 For Solana payments you also run a tiny server endpoint — install the optional
@@ -102,7 +103,7 @@ DOM changes:
   Translate ($0.01)
 </button>
 
-<script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
+<script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
 
 <script>
   document.querySelector('button').addEventListener('x402:result', (e) => {
@@ -114,7 +115,7 @@ DOM changes:
 ### 2. Programmatic
 
 ```js
-import { pay } from '@three-ws/x402-payment-modal';
+import { pay } from '@nirholas/x402-payment-modal';
 
 try {
   const { result, payment } = await pay({
@@ -211,7 +212,7 @@ Full reference: [docs/api-reference.md](docs/api-reference.md).
 Defaults work out of the box. Override host-specific bits with `configure()`:
 
 ```js
-import { configure } from '@three-ws/x402-payment-modal';
+import { configure } from '@nirholas/x402-payment-modal';
 
 configure({
   checkoutOrigin: 'https://pay.acme.com', // where your Solana checkout endpoint lives
@@ -224,7 +225,7 @@ configure({
 
 ```html
 <script type="module"
-  src="https://unpkg.com/@three-ws/x402-payment-modal"
+  src="https://unpkg.com/@nirholas/x402-payment-modal"
   data-x402-checkout-origin="https://pay.acme.com"
   data-x402-brand-name="Acme"
   data-x402-brand-url="https://acme.com"></script>
@@ -235,8 +236,8 @@ configure({
 | `checkoutOrigin` | `data-x402-checkout-origin` | the script's own origin |
 | `checkoutPath` | `data-x402-checkout-path` | `/api/x402-checkout` |
 | `footerNote` | `data-x402-footer-note` | `x402 · onchain settled` |
-| `brand.name` / `brand.url` | `data-x402-brand-name` / `-brand-url` | `three.ws` |
-| `builderCode.wallet` / `.service` | `data-x402-builder-wallet` / `-builder-service` | three.ws codes |
+| `brand.name` / `brand.url` | `data-x402-brand-name` / `-brand-url` | `null` (footer link hidden) |
+| `builderCode.wallet` / `.service` | `data-x402-builder-wallet` / `-builder-service` | `''` (no self-attribution) |
 | `esm.solanaWeb3` / `esm.nobleHashesSha3` | — | pinned esm.sh URLs |
 
 Repoint `esm.*` at a self-hosted mirror if a strict Content-Security-Policy
@@ -254,7 +255,7 @@ tx into the `X-PAYMENT` envelope. The package ships it.
 
 ```js
 import express from 'express';
-import { x402CheckoutRouter } from '@three-ws/x402-payment-modal/server/express';
+import { x402CheckoutRouter } from '@nirholas/x402-payment-modal/server/express';
 
 const app = express();
 app.use(express.json());
@@ -265,28 +266,30 @@ app.listen(3000);
 **Vercel / Next.js** — `api/x402-checkout.js`:
 
 ```js
-export { default } from '@three-ws/x402-payment-modal/server/vercel';
+export { default } from '@nirholas/x402-payment-modal/server/vercel';
 ```
 
 Lower-level helpers (`prepareSolanaCheckout`, `encodeX402Payment`,
 `handleCheckout`, `CheckoutError`) are exported from
-`@three-ws/x402-payment-modal/server`. Full guide:
+`@nirholas/x402-payment-modal/server`. Full guide:
 [docs/server-setup.md](docs/server-setup.md).
 
 ---
 
-## Accepting multiple Solana tokens (USDC + THREE)
+## Accepting multiple Solana tokens
 
-An x402 challenge can list more than one accepted payment. List a USDC accept
-**and** a [$THREE](https://three.ws/three-token) accept on Solana, and the modal
-renders a token picker: the buyer chooses which to pay in, the headline price and
-the transaction follow the choice. No client wiring — the checkout endpoint
-already builds an SPL transfer for whatever mint the chosen accept names.
+USDC is the default settlement asset, but an x402 challenge can list more than one
+accepted payment. List a USDC accept **and** a second SPL-token accept on Solana,
+and the modal renders a token picker: the buyer chooses which to pay in, the
+headline price and the transaction follow the choice. No client wiring — the
+checkout endpoint already builds an SPL transfer for whatever mint the chosen
+accept names. The package ships a built-in `THREE` opt-in token as a ready
+example, but any mint works.
 
 Build the accepts with the `solanaAccept` helper (no hardcoded mints):
 
 ```js
-import { solanaAccept } from '@three-ws/x402-payment-modal/server';
+import { solanaAccept } from '@nirholas/x402-payment-modal/server';
 
 // feePayer is your facilitator's sponsor account (pays the SOL network fee).
 const accepts = [
@@ -304,9 +307,10 @@ and emits a spec-shaped `accept`. The constants `THREE_MINT`, `USDC_MINT_SOLANA`
 and `WELL_KNOWN_SOLANA_TOKENS` are exported too. On the client, the same mints
 are exposed at `window.X402.tokens` for inline merchants.
 
-> **THREE is a utility token, not a stablecoin.** Its price floats, so the modal
-> can't dollar-denominate it for browser-side spending caps — enforce caps for
-> THREE server-side. USDC caps work in the browser as usual.
+> **Non-stable tokens float against the dollar.** The modal can't
+> dollar-denominate a floating-price token for browser-side spending caps — so
+> enforce caps for any non-stable token (like `THREE`) server-side. USDC and
+> other stablecoin caps work in the browser as usual.
 
 ---
 
@@ -340,8 +344,7 @@ Modern evergreen browsers (ES2020, `BigInt`, dynamic `import()`, `fetch`,
 
 ## License
 
-[Apache-2.0](LICENSE) © three.ws
+[Apache-2.0](LICENSE) © nirholas
 
-> Maintained inside the [three.ws](https://three.ws) monorepo and published as a
-> standalone package. Issues and PRs:
-> <https://github.com/nirholas/three.ws/issues>.
+> Standalone, dependency-free package. Issues and PRs:
+> <https://github.com/nirholas/x402-payment-modal/issues>.

@@ -2,7 +2,7 @@
   "name": "x402-checkout-example",
   "private": true,
   "version": "1.0.0",
-  "description": "Runnable Express server that mounts the @three-ws/x402-payment-modal Solana checkout router and serves a demo paid endpoint.",
+  "description": "Runnable Express server that mounts the @nirholas/x402-payment-modal Solana checkout router and serves a demo paid endpoint.",
   "type": "module",
   "scripts": {
     "start": "node server.js"
@@ -10,7 +10,7 @@
   "dependencies": {
     "@solana/spl-token": "*",
     "@solana/web3.js": "*",
-    "@three-ws/x402-payment-modal": "*",
+    "@nirholas/x402-payment-modal": "*",
     "express": "*"
   }
 }

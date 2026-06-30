@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
-import type { PayOptions, PayResult, X402Config } from '@three-ws/x402-payment-modal';
+import type { PayOptions, PayResult, X402Config } from '@nirholas/x402-payment-modal';
 
 export type X402Status = 'idle' | 'paying' | 'done' | 'error';
 

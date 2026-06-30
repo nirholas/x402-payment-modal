@@ -9,7 +9,7 @@
     ─────────────────────────────────────────────────────────────────────────
     DEMO ONLY
 
-    This page shows three ways to use @three-ws/x402-payment-modal with no
+    This page shows three ways to use @nirholas/x402-payment-modal with no
     build step at all — just an ES module loaded from a CDN.
 
       (a) Declarative: a button annotated with data-x402-* attributes. The
@@ -123,7 +123,7 @@
   -->
   <script
     type="module"
-    src="https://unpkg.com/@three-ws/x402-payment-modal"
+    src="https://unpkg.com/@nirholas/x402-payment-modal"
     data-x402-brand-name="Acme Summaries"
     data-x402-brand-url="https://example.com"
     data-x402-checkout-origin="https://example.com"
@@ -173,7 +173,7 @@
     // (b) Programmatic usage: import pay() straight from the CDN module.
     // In a self-hosted setup, import from your own URL instead, e.g.
     //   import { pay } from '/vendor/x402.min.js';
-    import { pay } from 'https://unpkg.com/@three-ws/x402-payment-modal';
+    import { pay } from 'https://unpkg.com/@nirholas/x402-payment-modal';
 
     const button = document.getElementById('programmatic-pay');
 

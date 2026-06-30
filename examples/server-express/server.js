@@ -1,4 +1,4 @@
-// Runnable Express server for @three-ws/x402-payment-modal.
+// Runnable Express server for @nirholas/x402-payment-modal.
 //
 // What it does:
 //   1. Mounts the Solana checkout router at /api/x402-checkout. The browser
@@ -17,8 +17,8 @@
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { x402CheckoutRouter } from '@three-ws/x402-payment-modal/server/express';
-import { solanaAccept } from '@three-ws/x402-payment-modal/server';
+import { x402CheckoutRouter } from '@nirholas/x402-payment-modal/server/express';
+import { solanaAccept } from '@nirholas/x402-payment-modal/server';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;
@@ -45,7 +45,7 @@ app.use('/api/x402-checkout', x402CheckoutRouter({ rpcUrl: SOLANA_RPC_URL }));
 // IMPORTANT: verifying and settling the X-PAYMENT payload against an x402
 // facilitator is OUT OF SCOPE for this demo. In production you would verify the
 // payment proof (and idempotency) before returning 200. See the docs:
-// https://github.com/three-ws/x402-payment-modal/tree/main/docs
+// https://github.com/nirholas/x402-payment-modal/tree/main/docs
 //
 // Synthetic placeholders below — replace payTo / feePayer with YOUR addresses.
 const DEMO_PAY_TO = 'So11111111111111111111111111111111111111112'; // replace me
@@ -55,22 +55,29 @@ app.get('/api/paid/hello', (req, res) => {
   const hasPayment = Boolean(req.get('X-PAYMENT'));
 
   if (!hasPayment) {
-    // No payment yet → answer with the x402 v2 challenge. We offer TWO Solana
-    // tokens — USDC and THREE — so the modal shows a token picker and the buyer
-    // chooses which to pay in. `solanaAccept` builds each spec-shaped entry.
+    // No payment yet → answer with the x402 v2 challenge. USDC is the default
+    // settlement asset. `solanaAccept` builds the spec-shaped accept entry.
     const common = { payTo: DEMO_PAY_TO, feePayer: DEMO_FEE_PAYER, maxTimeoutSeconds: 60 };
+    const accepts = [
+      solanaAccept({ token: 'usdc', uiAmount: 0.01, ...common }), // $0.01 in USDC
+    ];
+    // OPTIONAL: offer a second SPL token so the modal shows a token picker and
+    // the buyer chooses which to pay in. Set ACCEPT_SECOND_TOKEN=three (or pass
+    // any explicit mint to solanaAccept) to enable it. USDC stays the default.
+    if (process.env.ACCEPT_SECOND_TOKEN) {
+      accepts.push(
+        solanaAccept({ token: process.env.ACCEPT_SECOND_TOKEN, uiAmount: 1000, ...common }),
+      );
+    }
     return res.status(402).json({
       x402Version: 2,
       error: 'Payment required',
       resource: {
         url: `${req.protocol}://${req.get('host')}/api/paid/hello`,
-        description: 'A friendly hello — pay in USDC or THREE.',
+        description: 'A friendly hello — pay per call in USDC.',
         mimeType: 'application/json',
       },
-      accepts: [
-        solanaAccept({ token: 'usdc', uiAmount: 0.01, ...common }),  // $0.01 in USDC
-        solanaAccept({ token: 'three', uiAmount: 1000, ...common }), // or 1,000 THREE
-      ],
+      accepts,
     });
   }
 

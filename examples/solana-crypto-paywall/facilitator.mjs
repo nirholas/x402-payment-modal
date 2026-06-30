@@ -7,9 +7,9 @@
 // facilitator co-signs as the fee payer and broadcasts — so the merchant never
 // holds a private key and pays no gas.
 //
-// This is the same wire format the main three.ws app uses (api/_lib/x402-spec.js
-// verifyPayment/settlePayment), trimmed to exactly what the Solana exact path
-// needs so the example stays self-contained and easy to read:
+// This is the standard x402 v2 verify/settle wire format, trimmed to exactly
+// what the Solana exact path needs so the example stays self-contained and easy
+// to read:
 //
 //   POST {facilitator}/verify  { x402Version, paymentPayload, paymentRequirements }
 //     → { isValid: boolean, invalidReason?, payer? }
