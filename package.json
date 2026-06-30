@@ -1,129 +1,128 @@
 {
-  "name": "@three-ws/x402-payment-modal",
-  "version": "1.2.0",
-  "description": "Drop-in x402 payment modal for any paid HTTP endpoint. One ES module, zero runtime dependencies — handles wallet connect (Phantom/Solana + EVM via EIP-3009), the 402 → sign → settle flow, SIWX re-entry, client-side spending caps, and a receipt. Vanilla JS, no bundler required.",
-  "type": "module",
-  "main": "./src/index.js",
-  "module": "./src/index.js",
-  "types": "./types/index.d.ts",
-  "browser": "./dist/x402.min.js",
-  "unpkg": "./dist/x402.min.js",
-  "jsdelivr": "./dist/x402.min.js",
-  "exports": {
-    ".": {
-      "types": "./types/index.d.ts",
-      "import": "./src/index.js",
-      "default": "./src/index.js"
-    },
-    "./min": {
-      "types": "./types/index.d.ts",
-      "default": "./dist/x402.min.js"
-    },
-    "./server": {
-      "types": "./types/server.d.ts",
-      "import": "./server/checkout.js",
-      "default": "./server/checkout.js"
-    },
-    "./server/express": {
-      "import": "./server/express.js",
-      "default": "./server/express.js"
-    },
-    "./server/vercel": {
-      "import": "./server/vercel.js",
-      "default": "./server/vercel.js"
-    },
-    "./react": {
-      "types": "./react/index.d.ts",
-      "import": "./react/index.js",
-      "default": "./react/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "src",
-    "dist",
-    "types",
-    "server",
-    "react",
-    "examples",
-    "docs",
-    "README.md",
-    "TUTORIAL.md",
-    "CHANGELOG.md",
-    "LICENSE"
-  ],
-  "scripts": {
-    "build": "node build.mjs",
-    "test": "node --test \"test/*.test.js\"",
-    "prepublishOnly": "npm run build"
-  },
-  "keywords": [
-    "x402",
-    "payments",
-    "micropayments",
-    "paywall",
-    "pay-per-call",
-    "usdc",
-    "stablecoin",
-    "solana",
-    "phantom",
-    "evm",
-    "base",
-    "metamask",
-    "eip-3009",
-    "siwx",
-    "wallet",
-    "checkout",
-    "modal",
-    "agentic",
-    "web3",
-    "402",
-    "three-ws"
-  ],
-  "author": "three.ws <support@three.ws> (https://three.ws)",
-  "license": "Apache-2.0",
-  "homepage": "https://three.ws",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nirholas/three.ws.git",
-    "directory": "x402-payment-modal"
-  },
-  "bugs": {
-    "url": "https://github.com/nirholas/three.ws/issues"
-  },
-  "peerDependencies": {
-    "@solana/web3.js": "^1.95.0",
-    "@solana/spl-token": "^0.4.0",
-    "express": "^4.18.0 || ^5.0.0",
-    "react": ">=17"
-  },
-  "peerDependenciesMeta": {
-    "@solana/web3.js": {
-      "optional": true
-    },
-    "@solana/spl-token": {
-      "optional": true
-    },
-    "express": {
-      "optional": true
-    },
-    "react": {
-      "optional": true
-    }
-  },
-  "devDependencies": {
-    "@solana/spl-token": "^0.4.14",
-    "@solana/web3.js": "^1.98.4",
-    "esbuild": "^0.21.0"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "sideEffects": [
-    "./src/index.js",
-    "./dist/x402.min.js"
-  ]
+	"name": "@three-ws/x402-payment-modal",
+	"version": "1.2.0",
+	"description": "Drop-in x402 payment modal for any paid HTTP endpoint. One ES module, zero runtime dependencies — handles wallet connect (Phantom/Solana + EVM via EIP-3009), the 402 → sign → settle flow, SIWX re-entry, client-side spending caps, and a receipt. Vanilla JS, no bundler required.",
+	"type": "module",
+	"main": "./src/index.js",
+	"module": "./src/index.js",
+	"types": "./types/index.d.ts",
+	"browser": "./dist/x402.min.js",
+	"unpkg": "./dist/x402.min.js",
+	"jsdelivr": "./dist/x402.min.js",
+	"exports": {
+		".": {
+			"types": "./types/index.d.ts",
+			"import": "./src/index.js",
+			"default": "./src/index.js"
+		},
+		"./min": {
+			"types": "./types/index.d.ts",
+			"default": "./dist/x402.min.js"
+		},
+		"./server": {
+			"types": "./types/server.d.ts",
+			"import": "./server/checkout.js",
+			"default": "./server/checkout.js"
+		},
+		"./server/express": {
+			"import": "./server/express.js",
+			"default": "./server/express.js"
+		},
+		"./server/vercel": {
+			"import": "./server/vercel.js",
+			"default": "./server/vercel.js"
+		},
+		"./react": {
+			"types": "./react/index.d.ts",
+			"import": "./react/index.js",
+			"default": "./react/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"files": [
+		"src",
+		"dist",
+		"types",
+		"server",
+		"react",
+		"examples",
+		"docs",
+		"README.md",
+		"TUTORIAL.md",
+		"CHANGELOG.md",
+		"LICENSE"
+	],
+	"scripts": {
+		"build": "node build.mjs",
+		"test": "node --test \"test/*.test.js\"",
+		"prepublishOnly": "npm run build"
+	},
+	"keywords": [
+		"x402",
+		"payments",
+		"micropayments",
+		"paywall",
+		"pay-per-call",
+		"usdc",
+		"stablecoin",
+		"solana",
+		"phantom",
+		"evm",
+		"base",
+		"metamask",
+		"eip-3009",
+		"siwx",
+		"wallet",
+		"checkout",
+		"modal",
+		"agentic",
+		"web3",
+		"402",
+		"three-ws"
+	],
+	"author": "three.ws <support@three.ws> (https://three.ws)",
+	"license": "Apache-2.0",
+	"homepage": "https://three.ws",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/nirholas/x402-payment-modal.git"
+	},
+	"bugs": {
+		"url": "https://github.com/nirholas/x402-payment-modal/issues"
+	},
+	"peerDependencies": {
+		"@solana/web3.js": "^1.95.0",
+		"@solana/spl-token": "^0.4.0",
+		"express": "^4.18.0 || ^5.0.0",
+		"react": ">=17"
+	},
+	"peerDependenciesMeta": {
+		"@solana/web3.js": {
+			"optional": true
+		},
+		"@solana/spl-token": {
+			"optional": true
+		},
+		"express": {
+			"optional": true
+		},
+		"react": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@solana/spl-token": "^0.4.14",
+		"@solana/web3.js": "^1.98.4",
+		"esbuild": "^0.21.0"
+	},
+	"engines": {
+		"node": ">=18"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"sideEffects": [
+		"./src/index.js",
+		"./dist/x402.min.js"
+	]
 }
