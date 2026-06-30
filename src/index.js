@@ -1,9 +1,9 @@
-// @nirholas/x402-payment-modal — drop-in payment modal for any x402 endpoint.
+// @three-ws/x402-payment-modal — drop-in payment modal for any x402 endpoint.
 //
 // A single, dependency-free ES module. Drop it on any page and any element with
 // `data-x402-endpoint` opens a payment modal on click:
 //
-//   <script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
+//   <script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
 //
 //   <button
 //     data-x402-endpoint="https://example.com/api/paid/summarize"
@@ -18,7 +18,7 @@
 //
 // You can also call programmatically:
 //
-//   import { pay, configure } from '@nirholas/x402-payment-modal';
+//   import { pay, configure } from '@three-ws/x402-payment-modal';
 //   const out = await pay({
 //     endpoint: '/api/paid/summarize',
 //     body: { text: 'hello' },

@@ -27,7 +27,7 @@ for each integration style.
 The leanest integration: load the module and annotate a button. No JavaScript.
 
 ```html
-<script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
+<script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
 
 <button
   data-x402-endpoint="https://api.example.com/paid/summarize"
@@ -48,7 +48,7 @@ The leanest integration: load the module and annotate a button. No JavaScript.
 
 ```html
 <script type="module">
-  import { pay } from 'https://unpkg.com/@nirholas/x402-payment-modal';
+  import { pay } from 'https://unpkg.com/@three-ws/x402-payment-modal';
 
   document.getElementById('go').addEventListener('click', async () => {
     try {
@@ -70,7 +70,7 @@ The leanest integration: load the module and annotate a button. No JavaScript.
 ## 3. React
 
 ```jsx
-import { X402Button } from '@nirholas/x402-payment-modal/react';
+import { X402Button } from '@three-ws/x402-payment-modal/react';
 
 export default function Demo() {
   return (
@@ -93,7 +93,7 @@ See the [React reference](./react.md) for the `useX402` hook and all props.
 
 ```js
 import express from 'express';
-import { x402CheckoutRouter } from '@nirholas/x402-payment-modal/server/express';
+import { x402CheckoutRouter } from '@three-ws/x402-payment-modal/server/express';
 
 const app = express();
 app.use(express.json());
@@ -106,7 +106,7 @@ app.listen(3000);
 Then point the client at it:
 
 ```js
-import { configure } from '@nirholas/x402-payment-modal';
+import { configure } from '@three-ws/x402-payment-modal';
 configure({ checkoutOrigin: 'https://your-server.com' });
 ```
 
@@ -118,7 +118,7 @@ On the merchant side, build spec-shaped accepts (USDC default, optional second
 token for a picker):
 
 ```js
-import { solanaAccept } from '@nirholas/x402-payment-modal/server';
+import { solanaAccept } from '@three-ws/x402-payment-modal/server';
 
 const common = { payTo, feePayer, maxTimeoutSeconds: 60 };
 const accepts = [

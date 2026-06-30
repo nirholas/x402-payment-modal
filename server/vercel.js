@@ -2,11 +2,11 @@
 //
 // Save as `api/x402-checkout.js`:
 //
-//   export { default } from '@nirholas/x402-payment-modal/server/vercel';
+//   export { default } from '@three-ws/x402-payment-modal/server/vercel';
 //
 // or with options:
 //
-//   import { createVercelCheckoutHandler } from '@nirholas/x402-payment-modal/server/vercel';
+//   import { createVercelCheckoutHandler } from '@three-ws/x402-payment-modal/server/vercel';
 //   export default createVercelCheckoutHandler({ rpcUrl: process.env.SOLANA_RPC_URL });
 //
 // The modal POSTs to this route with `?action=prepare` and `?action=encode`.

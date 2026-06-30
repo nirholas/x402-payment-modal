@@ -3,11 +3,11 @@
 The `./react` subpath ships first-class React bindings for the modal:
 
 ```js
-import { X402Button, useX402, configure } from '@nirholas/x402-payment-modal/react';
+import { X402Button, useX402, configure } from '@three-ws/x402-payment-modal/react';
 ```
 
 `react` is an **optional peer dependency** — you already have it in a React app.
-The browser-only core (`@nirholas/x402-payment-modal`) is **dynamically imported
+The browser-only core (`@three-ws/x402-payment-modal`) is **dynamically imported
 on first use**, so nothing from it runs during render or on the server. That makes
 both exports **SSR-safe** in Next.js, Remix, Astro, etc. — no `dynamic`/`ssr:false`
 wrapper needed.
@@ -25,7 +25,7 @@ A drop-in pay button. It renders a `<button>`, runs the modal on click, and call
 `Processing…`, and sets `aria-busy`. User cancellation is silent (no `onError`).
 
 ```jsx
-import { X402Button } from '@nirholas/x402-payment-modal/react';
+import { X402Button } from '@three-ws/x402-payment-modal/react';
 
 export default function Buy() {
   return (
@@ -75,7 +75,7 @@ control over the trigger UI (your own button, a menu item, an effect) instead of
 `<X402Button>`.
 
 ```jsx
-import { useX402 } from '@nirholas/x402-payment-modal/react';
+import { useX402 } from '@three-ws/x402-payment-modal/react';
 
 function PremiumGate() {
   const { pay, status, result, error, reset, isPaying } = useX402({
@@ -127,7 +127,7 @@ at app startup:
 
 ```jsx
 import { useEffect } from 'react';
-import { configure } from '@nirholas/x402-payment-modal/react';
+import { configure } from '@three-ws/x402-payment-modal/react';
 
 export default function App({ children }) {
   useEffect(() => {
@@ -148,7 +148,7 @@ The accepted options are identical to the core
 
 ## SSR notes
 
-- Import from `@nirholas/x402-payment-modal/react` anywhere — the heavy core is
+- Import from `@three-ws/x402-payment-modal/react` anywhere — the heavy core is
   only loaded inside `pay()` / the button's click handler.
 - The first payment pays a one-time dynamic-import cost; subsequent ones reuse the
   loaded module.

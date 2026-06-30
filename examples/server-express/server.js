@@ -1,4 +1,4 @@
-// Runnable Express server for @nirholas/x402-payment-modal.
+// Runnable Express server for @three-ws/x402-payment-modal.
 //
 // What it does:
 //   1. Mounts the Solana checkout router at /api/x402-checkout. The browser
@@ -17,8 +17,8 @@
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { x402CheckoutRouter } from '@nirholas/x402-payment-modal/server/express';
-import { solanaAccept } from '@nirholas/x402-payment-modal/server';
+import { x402CheckoutRouter } from '@three-ws/x402-payment-modal/server/express';
+import { solanaAccept } from '@three-ws/x402-payment-modal/server';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 3000;

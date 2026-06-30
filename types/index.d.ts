@@ -1,4 +1,4 @@
-// Type definitions for @nirholas/x402-payment-modal
+// Type definitions for @three-ws/x402-payment-modal
 
 /** Client-side spending caps, enforced in localStorage before each payment. */
 export interface SpendingCaps {

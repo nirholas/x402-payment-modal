@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `@nirholas/x402-payment-modal` are documented here. This
+All notable changes to `@three-ws/x402-payment-modal` are documented here. This
 project adheres to [Semantic Versioning](https://semver.org).
 
 ## 1.2.0
@@ -27,7 +27,7 @@ Hardening pass for scale and a UX/accessibility overhaul.
 ### Added — developer experience
 
 - **First-class React export** — `import { X402Button, useX402 } from
-  '@nirholas/x402-payment-modal/react'`. `useX402()` exposes a
+  '@three-ws/x402-payment-modal/react'`. `useX402()` exposes a
   `{ pay, status, result, error, reset, isPaying }` state machine; both are
   SSR-safe (the browser-only core is dynamically imported on first use). `react`
   is an optional peer dependency.
@@ -109,7 +109,7 @@ Initial public release as a standalone, dependency-free package.
 - **`configure()` + script-tag `data-*` config** for checkout origin, branding,
   builder-code attribution, and esm.sh CDN URLs.
 - **Framework-agnostic server module** with Express and Vercel adapters
-  (`@nirholas/x402-payment-modal/server`).
+  (`@three-ws/x402-payment-modal/server`).
 - **Theming** — light + automatic dark mode, all classes overridable, `--x402-z`
   z-index custom property.
 - **Automatic 429 throttle retry** — re-sends the same signed payment up to twice

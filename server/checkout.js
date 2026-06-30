@@ -1,4 +1,4 @@
-// @nirholas/x402-payment-modal/server — Solana checkout helpers.
+// @three-ws/x402-payment-modal/server — Solana checkout helpers.
 //
 // The modal's EVM path signs EIP-3009 typed-data entirely in the browser and
 // never calls your server. The Solana path is different: Phantom only *signs*

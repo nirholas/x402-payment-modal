@@ -1,14 +1,14 @@
 # React example
 
 Uses the package's **shipped** React wrapper —
-[`@nirholas/x402-payment-modal/react`](../../docs/react.md) — not a hand-rolled
+[`@three-ws/x402-payment-modal/react`](../../docs/react.md) — not a hand-rolled
 component. You get `<X402Button>` (a drop-in button) and `useX402()` (a headless
 hook), both SSR-safe.
 
 ## Install
 
 ```bash
-npm i @nirholas/x402-payment-modal
+npm i @three-ws/x402-payment-modal
 ```
 
 `react` is an optional peer dependency you already have.
@@ -18,7 +18,7 @@ npm i @nirholas/x402-payment-modal
 [`App.jsx`](./App.jsx) shows both the button and the hook. The button form:
 
 ```jsx
-import { X402Button } from '@nirholas/x402-payment-modal/react';
+import { X402Button } from '@three-ws/x402-payment-modal/react';
 
 export default function Demo() {
   return (
@@ -40,7 +40,7 @@ export default function Demo() {
 The headless form, for full control over the trigger UI:
 
 ```jsx
-import { useX402 } from '@nirholas/x402-payment-modal/react';
+import { useX402 } from '@three-ws/x402-payment-modal/react';
 
 function Buy() {
   const { pay, isPaying } = useX402({ merchant: 'Acme' });

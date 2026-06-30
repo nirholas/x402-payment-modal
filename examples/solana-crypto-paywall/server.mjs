@@ -1,5 +1,5 @@
 // Runnable demo: a free crypto-price API paywalled with x402 on Solana, served
-// to the @nirholas/x402-payment-modal you ship on npm.
+// to the @three-ws/x402-payment-modal you ship on npm.
 //
 // What it proves end-to-end:
 //   1. The published modal (loaded from unpkg in public/index.html) drives the
@@ -17,8 +17,8 @@
 //   open http://localhost:4021
 //
 // As a standalone project (outside this repo): `npm install`, then change the
-// two relative imports below to '@nirholas/x402-payment-modal/server/express'
-// and '@nirholas/x402-payment-modal/server'.
+// two relative imports below to '@three-ws/x402-payment-modal/server/express'
+// and '@three-ws/x402-payment-modal/server'.
 
 import express from 'express';
 import { fileURLToPath } from 'node:url';

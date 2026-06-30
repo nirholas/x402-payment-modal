@@ -1,7 +1,7 @@
 /**
- * React example for @nirholas/x402-payment-modal.
+ * React example for @three-ws/x402-payment-modal.
  *
- * This uses the package's SHIPPED React wrapper — `@nirholas/x402-payment-modal/react`
+ * This uses the package's SHIPPED React wrapper — `@three-ws/x402-payment-modal/react`
  * — not a hand-rolled component. The wrapper exports:
  *
  *   - <X402Button>  a drop-in pay button
@@ -18,7 +18,7 @@
  */
 
 import { useState } from 'react';
-import { X402Button, useX402 } from '@nirholas/x402-payment-modal/react';
+import { X402Button, useX402 } from '@three-ws/x402-payment-modal/react';
 
 export default function App() {
   return (

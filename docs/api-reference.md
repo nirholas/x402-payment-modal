@@ -7,7 +7,7 @@ and use `window.X402`. For how these pieces fit together see
 [React reference](./react.md).
 
 ```js
-import { pay, configure, init, version } from '@nirholas/x402-payment-modal';
+import { pay, configure, init, version } from '@three-ws/x402-payment-modal';
 ```
 
 When loaded as a script, the same functions are available as
@@ -16,7 +16,7 @@ When loaded as a script, the same functions are available as
 `MutationObserver`).
 
 ```html
-<script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
+<script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
 ```
 
 ---
@@ -88,7 +88,7 @@ Sets global defaults. All fields are optional; nested objects are
 **shallow-merged** into the current config. Returns the resulting config.
 
 ```js
-import { configure } from '@nirholas/x402-payment-modal';
+import { configure } from '@three-ws/x402-payment-modal';
 
 configure({
   checkoutOrigin: 'https://pay.example.com',
@@ -132,7 +132,7 @@ matching elements, so you rarely need it — call it after injecting markup into
 context the observer doesn't cover (e.g. inside a shadow root you control).
 
 ```js
-import { init } from '@nirholas/x402-payment-modal';
+import { init } from '@three-ws/x402-payment-modal';
 init();
 ```
 
@@ -143,7 +143,7 @@ init();
 The package version string.
 
 ```js
-import { version } from '@nirholas/x402-payment-modal';
+import { version } from '@three-ws/x402-payment-modal';
 console.log(version); // e.g. "1.2.0"
 ```
 
@@ -156,7 +156,7 @@ exports the well-known Solana mints (also at `window.X402.tokens`):
 
 ```js
 import { USDC_MINT_SOLANA, THREE_MINT, KNOWN_SOLANA_TOKENS }
-  from '@nirholas/x402-payment-modal';
+  from '@three-ws/x402-payment-modal';
 ```
 
 | Export | Type | Notes |
@@ -214,7 +214,7 @@ equivalent to calling `configure()`.
 ```html
 <script
   type="module"
-  src="https://unpkg.com/@nirholas/x402-payment-modal"
+  src="https://unpkg.com/@three-ws/x402-payment-modal"
   data-x402-checkout-origin="https://pay.example.com"
   data-x402-checkout-path="/api/x402-checkout"
   data-x402-brand-name="Example"

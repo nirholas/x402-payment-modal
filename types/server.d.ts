@@ -1,4 +1,4 @@
-// Type definitions for @nirholas/x402-payment-modal/server
+// Type definitions for @three-ws/x402-payment-modal/server
 
 /** One x402 `accept` entry (scheme "exact", Solana network). */
 export interface SolanaAccept {

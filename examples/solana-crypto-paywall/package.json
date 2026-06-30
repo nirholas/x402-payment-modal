@@ -2,14 +2,14 @@
   "name": "x402-solana-crypto-paywall",
   "private": true,
   "version": "1.0.0",
-  "description": "Demo: a free crypto-price API paywalled with x402 on Solana, served to the @nirholas/x402-payment-modal. Payout wallet is set at runtime, not from env.",
+  "description": "Demo: a free crypto-price API paywalled with x402 on Solana, served to the @three-ws/x402-payment-modal. Payout wallet is set at runtime, not from env.",
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
     "dev": "node server.mjs"
   },
   "dependencies": {
-    "@nirholas/x402-payment-modal": "*",
+    "@three-ws/x402-payment-modal": "*",
     "@solana/web3.js": "^1.95.0",
     "@solana/spl-token": "^0.4.0",
     "express": "^4.19.0"

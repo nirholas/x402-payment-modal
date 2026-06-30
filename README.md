@@ -1,10 +1,10 @@
-# @nirholas/x402-payment-modal
+# @three-ws/x402-payment-modal
 
 > The complete drop-in checkout for any [x402](https://x402.org) paid endpoint — wallet connect, sign, settle, receipt.
 
-[![npm](https://img.shields.io/npm/v/@nirholas/x402-payment-modal.svg)](https://www.npmjs.com/package/@nirholas/x402-payment-modal)
-[![npm downloads](https://img.shields.io/npm/dm/@nirholas/x402-payment-modal.svg)](https://www.npmjs.com/package/@nirholas/x402-payment-modal)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/@nirholas/x402-payment-modal.svg)](https://bundlephobia.com/package/@nirholas/x402-payment-modal)
+[![npm](https://img.shields.io/npm/v/@three-ws/x402-payment-modal.svg)](https://www.npmjs.com/package/@three-ws/x402-payment-modal)
+[![npm downloads](https://img.shields.io/npm/dm/@three-ws/x402-payment-modal.svg)](https://www.npmjs.com/package/@three-ws/x402-payment-modal)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@three-ws/x402-payment-modal.svg)](https://bundlephobia.com/package/@three-ws/x402-payment-modal)
 [![License: Proprietary](https://img.shields.io/badge/license-Proprietary-red.svg)](./LICENSE)
 
 **A drop-in payment modal for any [x402](https://x402.org) paid endpoint.** The
@@ -17,7 +17,7 @@ and a receipt. It ships a **server** checkout adapter for the Solana rail
 (`./react`) — pick only the pieces you need. Vanilla JS, no bundler required.
 
 ```html
-<script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
+<script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
 
 <button
   data-x402-endpoint="https://api.example.com/paid/summarize"
@@ -73,10 +73,10 @@ throttle retries, and the receipt, so you ship a paid endpoint in minutes.
 
 ## Which x402 modal do I want?
 
-This package has a lighter sibling, **[`@nirholas/x402-modal`](https://www.npmjs.com/package/@nirholas/x402-modal)**.
+This package has a lighter sibling, **[`@three-ws/x402-modal`](https://www.npmjs.com/package/@three-ws/x402-modal)**.
 Both render a drop-in modal; choose by how much you need.
 
-| | **`@nirholas/x402-payment-modal`** (this) | `@nirholas/x402-modal` |
+| | **`@three-ws/x402-payment-modal`** (this) | `@three-ws/x402-modal` |
 | --- | --- | --- |
 | Goal | Full checkout SDK: client **+ server + React** | Minimal client-only modal |
 | Chains | Solana **and** EVM (Base/Arbitrum/Optimism) | Client modal, EVM-leaning |
@@ -90,7 +90,7 @@ Both render a drop-in modal; choose by how much you need.
 
 **Rule of thumb:** taking real Solana payments, want a React component, or need
 caps/SIWX → use **this** package. Just need a tiny EVM paywall button and nothing
-else → the lighter `@nirholas/x402-modal` is enough.
+else → the lighter `@three-ws/x402-modal` is enough.
 
 ## Package subpaths
 
@@ -99,12 +99,12 @@ optional.
 
 | Subpath | Import | Needs |
 | --- | --- | --- |
-| `.` | `@nirholas/x402-payment-modal` | nothing (browser) |
-| `./min` | `@nirholas/x402-payment-modal/min` | nothing — pre-minified bundle |
-| `./server` | `@nirholas/x402-payment-modal/server` | `@solana/web3.js`, `@solana/spl-token` |
-| `./server/express` | `@nirholas/x402-payment-modal/server/express` | + `express` |
-| `./server/vercel` | `@nirholas/x402-payment-modal/server/vercel` | `@solana/web3.js`, `@solana/spl-token` |
-| `./react` | `@nirholas/x402-payment-modal/react` | `react` |
+| `.` | `@three-ws/x402-payment-modal` | nothing (browser) |
+| `./min` | `@three-ws/x402-payment-modal/min` | nothing — pre-minified bundle |
+| `./server` | `@three-ws/x402-payment-modal/server` | `@solana/web3.js`, `@solana/spl-token` |
+| `./server/express` | `@three-ws/x402-payment-modal/server/express` | + `express` |
+| `./server/vercel` | `@three-ws/x402-payment-modal/server/vercel` | `@solana/web3.js`, `@solana/spl-token` |
+| `./react` | `@three-ws/x402-payment-modal/react` | `react` |
 
 ---
 
@@ -113,17 +113,17 @@ optional.
 **Via CDN (no build step):**
 
 ```html
-<script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
+<script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
 ```
 
 **Via npm (bundler / framework):**
 
 ```bash
-npm install @nirholas/x402-payment-modal
+npm install @three-ws/x402-payment-modal
 ```
 
 ```js
-import { pay, configure } from '@nirholas/x402-payment-modal';
+import { pay, configure } from '@three-ws/x402-payment-modal';
 ```
 
 ### Optional peer dependencies
@@ -168,7 +168,7 @@ DOM changes:
   Translate ($0.01)
 </button>
 
-<script type="module" src="https://unpkg.com/@nirholas/x402-payment-modal"></script>
+<script type="module" src="https://unpkg.com/@three-ws/x402-payment-modal"></script>
 
 <script>
   document.querySelector('button').addEventListener('x402:result', (e) => {
@@ -180,7 +180,7 @@ DOM changes:
 ### 2. Programmatic
 
 ```js
-import { pay } from '@nirholas/x402-payment-modal';
+import { pay } from '@three-ws/x402-payment-modal';
 
 try {
   const { result, payment } = await pay({
@@ -277,7 +277,7 @@ Full reference: [docs/api-reference.md](docs/api-reference.md).
 Defaults work out of the box. Override host-specific bits with `configure()`:
 
 ```js
-import { configure } from '@nirholas/x402-payment-modal';
+import { configure } from '@three-ws/x402-payment-modal';
 
 configure({
   checkoutOrigin: 'https://pay.acme.com', // where your Solana checkout endpoint lives
@@ -290,7 +290,7 @@ configure({
 
 ```html
 <script type="module"
-  src="https://unpkg.com/@nirholas/x402-payment-modal"
+  src="https://unpkg.com/@three-ws/x402-payment-modal"
   data-x402-checkout-origin="https://pay.acme.com"
   data-x402-brand-name="Acme"
   data-x402-brand-url="https://acme.com"></script>
@@ -326,7 +326,7 @@ tx into the `X-PAYMENT` envelope. The package ships it.
 
 ```js
 import express from 'express';
-import { x402CheckoutRouter } from '@nirholas/x402-payment-modal/server/express';
+import { x402CheckoutRouter } from '@three-ws/x402-payment-modal/server/express';
 
 const app = express();
 app.use(express.json());
@@ -337,14 +337,14 @@ app.listen(3000);
 **Vercel / Next.js** — `api/x402-checkout.js`:
 
 ```js
-export { default } from '@nirholas/x402-payment-modal/server/vercel';
+export { default } from '@three-ws/x402-payment-modal/server/vercel';
 ```
 
 Pass `rpcUrls: [...]` (an ordered list, tried with failover) instead of a single
 `rpcUrl` for production — the public RPC is rate-limited and warns once at
 startup. Lower-level helpers (`prepareSolanaCheckout`, `encodeX402Payment`,
 `handleCheckout`, `CheckoutError`, `solanaAccept`) are exported from
-`@nirholas/x402-payment-modal/server`. Full guide:
+`@three-ws/x402-payment-modal/server`. Full guide:
 [docs/server-setup.md](docs/server-setup.md).
 
 ---
@@ -356,7 +356,7 @@ dynamically imported on first use, so both are **SSR-safe** — nothing runs dur
 render or on the server.
 
 ```jsx
-import { X402Button, useX402 } from '@nirholas/x402-payment-modal/react';
+import { X402Button, useX402 } from '@three-ws/x402-payment-modal/react';
 
 // Drop-in button:
 <X402Button
@@ -400,7 +400,7 @@ example, but any mint works.
 Build the accepts with the `solanaAccept` helper (no hardcoded mints):
 
 ```js
-import { solanaAccept } from '@nirholas/x402-payment-modal/server';
+import { solanaAccept } from '@three-ws/x402-payment-modal/server';
 
 // feePayer is your facilitator's sponsor account (pays the SOL network fee).
 const accepts = [
@@ -508,7 +508,7 @@ a token picker. See [Accepting multiple Solana tokens](#accepting-multiple-solan
 
 ## Related packages
 
-- **[`@nirholas/x402-modal`](https://www.npmjs.com/package/@nirholas/x402-modal)** —
+- **[`@three-ws/x402-modal`](https://www.npmjs.com/package/@three-ws/x402-modal)** —
   the lighter client-only sibling. See [the comparison above](#which-x402-modal-do-i-want).
 - **[x402 protocol](https://x402.org)** — the open "HTTP 402 Payment Required"
   micropayment standard this package implements (v2 envelope).

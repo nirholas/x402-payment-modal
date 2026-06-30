@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>x402 Crypto Paywall — Solana</title>
-  <meta name="description" content="Pay $0.01 USDC on Solana to unlock live crypto prices — a demo of the @nirholas/x402-payment-modal npm package." />
+  <meta name="description" content="Pay $0.01 USDC on Solana to unlock live crypto prices — a demo of the @three-ws/x402-payment-modal npm package." />
 
   <!--
     The payment modal is loaded straight from npm (unpkg) so this page exercises
@@ -13,7 +13,7 @@
   -->
   <script
     type="module"
-    src="https://unpkg.com/@nirholas/x402-payment-modal@1.2.0"
+    src="https://unpkg.com/@three-ws/x402-payment-modal@1.2.0"
     data-x402-brand-name="Crypto Prices"
     data-x402-brand-url="https://example.com"
     data-x402-footer-note="x402 · Solana · settled onchain"></script>
@@ -198,7 +198,7 @@
       </div>
       <h1>Pay-per-call <span class="grad">crypto prices</span>,<br/>settled on Solana.</h1>
       <p class="lede">
-        A live demo of <code>@nirholas/x402-payment-modal</code> — the modal we ship on npm.
+        A live demo of <code>@three-ws/x402-payment-modal</code> — the modal we ship on npm.
         Set a payout wallet, pick coins, and pay $0.01 USDC with Phantom to unlock real
         CoinGecko prices. One click; no wallet code.
       </p>
@@ -261,7 +261,7 @@
         <div><b>Data unlocked</b>On settle, the server returns live CoinGecko prices + an on-chain receipt.</div>
       </div>
       <p class="fine">
-        Modal loaded from <a href="https://www.npmjs.com/package/@nirholas/x402-payment-modal" target="_blank" rel="noopener">npm</a> ·
+        Modal loaded from <a href="https://www.npmjs.com/package/@three-ws/x402-payment-modal" target="_blank" rel="noopener">npm</a> ·
         prices from <a href="https://www.coingecko.com" target="_blank" rel="noopener">CoinGecko</a> ·
         settled via <a href="https://facilitator.payai.network" target="_blank" rel="noopener">PayAI</a>.
         Real micropayment on Solana mainnet — needs Phantom with a little USDC.

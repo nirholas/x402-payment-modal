@@ -1,6 +1,6 @@
 # Examples
 
-Runnable examples for [`@nirholas/x402-payment-modal`](https://www.npmjs.com/package/@nirholas/x402-payment-modal)
+Runnable examples for [`@three-ws/x402-payment-modal`](https://www.npmjs.com/package/@three-ws/x402-payment-modal)
 — a zero-dependency, vanilla-JS payment modal for any x402 paid HTTP endpoint.
 
 | Example | What it shows | Fastest way to try it |

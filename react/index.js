@@ -1,6 +1,6 @@
-// @nirholas/x402-payment-modal/react — first-class React bindings.
+// @three-ws/x402-payment-modal/react — first-class React bindings.
 //
-//   import { X402Button, useX402 } from '@nirholas/x402-payment-modal/react';
+//   import { X402Button, useX402 } from '@three-ws/x402-payment-modal/react';
 //
 // The core package is a browser-only ES module (it renders a modal and talks to
 // a wallet), so it is dynamically imported on first use — nothing from it runs
@@ -11,7 +11,7 @@ import { createElement, useCallback, useRef, useState } from 'react';
 
 let _modPromise;
 function loadCore() {
-	if (!_modPromise) _modPromise = import('@nirholas/x402-payment-modal');
+	if (!_modPromise) _modPromise = import('@three-ws/x402-payment-modal');
 	return _modPromise;
 }
 

@@ -1,4 +1,4 @@
-# Contributing to @nirholas/x402-payment-modal
+# Contributing to @three-ws/x402-payment-modal
 
 Thanks for helping improve the drop-in x402 checkout. This guide covers the local
 setup, the layout, and the bar for a change to land.
