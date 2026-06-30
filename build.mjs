@@ -11,7 +11,7 @@
  * esbuild trying (and failing) to resolve them at build time.
  */
 
-import esbuild from '../node_modules/esbuild/lib/main.js';
+import esbuild from 'esbuild';
 import { readFileSync, writeFileSync, copyFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
