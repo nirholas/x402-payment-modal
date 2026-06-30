@@ -76,5 +76,4 @@ Open an issue at <https://github.com/nirholas/x402-payment-modal/issues> with:
 
 ## License
 
-By contributing you agree your contributions are licensed under the project's
-[Apache-2.0](LICENSE) license.
+Proprietary — Copyright (c) 2026 nirholas. All Rights Reserved. Unauthorized use, copying, modification, or distribution is prohibited. See [LICENSE](./LICENSE). By contributing you assign all right, title, and interest in your contributions to the Owner, and agree they are governed by the project's proprietary license.

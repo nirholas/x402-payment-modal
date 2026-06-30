@@ -5,7 +5,7 @@
 [![npm](https://img.shields.io/npm/v/@nirholas/x402-payment-modal.svg)](https://www.npmjs.com/package/@nirholas/x402-payment-modal)
 [![npm downloads](https://img.shields.io/npm/dm/@nirholas/x402-payment-modal.svg)](https://www.npmjs.com/package/@nirholas/x402-payment-modal)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@nirholas/x402-payment-modal.svg)](https://bundlephobia.com/package/@nirholas/x402-payment-modal)
-[![license](https://img.shields.io/npm/l/@nirholas/x402-payment-modal.svg)](LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/license-Proprietary-red.svg)](./LICENSE)
 
 **A drop-in payment modal for any [x402](https://x402.org) paid endpoint.** The
 browser client is one ES module with zero runtime dependencies; it turns an HTTP
@@ -515,7 +515,7 @@ a token picker. See [Accepting multiple Solana tokens](#accepting-multiple-solan
 
 ## License
 
-[Apache-2.0](LICENSE) © [nirholas](https://github.com/nirholas)
+Proprietary — Copyright (c) 2026 nirholas. All Rights Reserved. Unauthorized use, copying, modification, or distribution is prohibited. See [LICENSE](./LICENSE).
 
 > Standalone package. Browser client is dependency-free; server/react peer deps
 > are optional. Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) and
