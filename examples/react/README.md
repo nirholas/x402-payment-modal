@@ -1,7 +1,9 @@
-# React example — `<X402Button>`
+# React example
 
-A drop-in React component that wraps `pay()` from
-[`@nirholas/x402-payment-modal`](https://www.npmjs.com/package/@nirholas/x402-payment-modal).
+Uses the package's **shipped** React wrapper —
+[`@nirholas/x402-payment-modal/react`](../../docs/react.md) — not a hand-rolled
+component. You get `<X402Button>` (a drop-in button) and `useX402()` (a headless
+hook), both SSR-safe.
 
 ## Install
 
@@ -9,12 +11,14 @@ A drop-in React component that wraps `pay()` from
 npm i @nirholas/x402-payment-modal
 ```
 
+`react` is an optional peer dependency you already have.
+
 ## Use it
 
-Copy [`X402Button.jsx`](./X402Button.jsx) into your project, then:
+[`App.jsx`](./App.jsx) shows both the button and the hook. The button form:
 
 ```jsx
-import X402Button from './X402Button';
+import { X402Button } from '@nirholas/x402-payment-modal/react';
 
 export default function Demo() {
   return (
@@ -24,7 +28,8 @@ export default function Demo() {
       body={{ url: 'https://en.wikipedia.org/wiki/x402' }}
       merchant="Acme Summaries"
       action="Summarize article"
-      label="Summarize for 0.01 USDC"
+      label="Summarize for $0.01"
+      caps={{ maxPerCall: 100_000 }}     // 0.10 USDC, stablecoin caps only
       onResult={(r) => console.log('paid', r.payment)}
       onError={(e) => console.error('payment failed', e)}
     />
@@ -32,38 +37,36 @@ export default function Demo() {
 }
 ```
 
-### Props
+The headless form, for full control over the trigger UI:
 
-| Prop       | Type       | Notes                                                       |
-| ---------- | ---------- | ---------------------------------------------------------- |
-| `endpoint` | `string`   | Required. The x402-enabled HTTP endpoint to call.          |
-| `method`   | `string`   | HTTP method (default `GET`).                               |
-| `body`     | `object`   | Request body (sent as JSON).                               |
-| `merchant` | `string`   | Display name shown in the modal.                           |
-| `action`   | `string`   | Short description of what the user is paying for.          |
-| `label`    | `string`   | Button text (default `Pay`). `children` overrides it.      |
-| `onResult` | `function` | Called with the `PayResult` on success.                    |
-| `onError`  | `function` | Called on failure. **Not** called when the user cancels.   |
+```jsx
+import { useX402 } from '@nirholas/x402-payment-modal/react';
 
-`onResult` receives `{ ok, result, payment?, siwx?, response }`.
+function Buy() {
+  const { pay, isPaying } = useX402({ merchant: 'Acme' });
+  return (
+    <button disabled={isPaying} onClick={() => pay({ endpoint: '/api/paid/premium' })}>
+      {isPaying ? 'Processing…' : 'Pay'}
+    </button>
+  );
+}
+```
+
+### `<X402Button>` props
+
+See the [React reference](../../docs/react.md#x402button) for the full table.
+`onResult` receives `{ ok, result, payment?, siwx?, response }`; `onError` is
+**not** called when the user cancels.
 
 ## SSR safety
 
-The package is browser-only (it renders a modal and connects to a wallet), so
-`X402Button` imports it lazily **inside the click handler**:
-
-```js
-const { pay } = await import('@nirholas/x402-payment-modal');
-```
-
-Nothing from the package runs during render or on the server, so the component
-is safe in Next.js, Remix, and other SSR frameworks without `dynamic`/`ssr:false`
-wrappers.
+The wrapper dynamically imports the browser-only core on first payment, so nothing
+from the package runs during render or on the server — safe in Next.js, Remix, and
+Astro without a `dynamic`/`ssr:false` wrapper.
 
 ## Solana payments need a server
 
-EVM payments sign in the browser (EIP-3009) and need no backend. **Solana
-payments require a checkout endpoint** that builds and settles the transfer.
-Stand one up before going live — see
+EVM payments sign in the browser (EIP-3009) and need no backend. **Solana payments
+require a checkout endpoint** that builds and settles the transfer — see
 [`../../docs/server-setup.md`](../../docs/server-setup.md) and the runnable
-[`examples/server-express`](../server-express) server.
+[`examples/server-express`](../server-express).

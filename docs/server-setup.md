@@ -44,14 +44,38 @@ npm install @solana/web3.js@^1.95 @solana/spl-token@^0.4
 
 EVM-only sites can skip this entirely.
 
+## Adapter options
+
+Every adapter (`x402CheckoutRouter`, `createVercelCheckoutHandler`) and the core
+`handleCheckout` take the same options:
+
+| Option           | Type        | Default | Purpose                                                                 |
+|------------------|-------------|---------|-------------------------------------------------------------------------|
+| `rpcUrl`         | `string`    | public RPC | Single Solana **mainnet** RPC URL.                                    |
+| `rpcUrls`        | `string[]`  | —       | Ordered mainnet RPCs tried with **failover** on a transient RPC error. **Preferred for production.** |
+| `devnetRpcUrl`   | `string`    | public devnet | Single Solana **devnet** RPC URL.                                |
+| `devnetRpcUrls`  | `string[]`  | —       | Ordered devnet RPCs with failover.                                      |
+| `origin`         | `string`    | `'*'`   | `Access-Control-Allow-Origin` for the adapter.                          |
+| `logger`         | `Function`  | `console.error` | Called with the root cause of an unexpected (non-`CheckoutError`) failure before the generic `502`. |
+
+> **Use a dedicated RPC.** With no `rpcUrl`/`rpcUrls` the helpers fall back to the
+> public Solana RPC, which is heavily rate-limited and **warns once** at startup —
+> it will fail under real load. Pass a list (Helius / Triton / QuickNode) via
+> `rpcUrls` so the adapter can rotate on a transient error:
+>
+> ```js
+> x402CheckoutRouter({ rpcUrls: [process.env.SOLANA_RPC_PRIMARY, process.env.SOLANA_RPC_BACKUP] });
+> ```
+
 ## Environment variables
 
 | Variable          | Purpose                                                        |
 |-------------------|---------------------------------------------------------------|
 | `SOLANA_RPC_URL`  | Mainnet RPC endpoint used to build/serialize the transaction. |
 
-You may also pass `rpcUrl` (and `devnetRpcUrl`) explicitly to the adapters or to
-`prepareSolanaCheckout`; explicit options take precedence over the env var.
+These are your wiring convention — the package reads no env var itself. Pass the
+value into the option (`rpcUrl: process.env.SOLANA_RPC_URL`). Explicit options
+always take precedence.
 
 ## Mounting with Express
 
@@ -74,9 +98,10 @@ app.use(
 app.listen(3000);
 ```
 
-`x402CheckoutRouter({ rpcUrl?, devnetRpcUrl?, origin? })` returns an Express
-`RequestHandler`. It sets permissive CORS by default (`origin: '*'`), answers
-`OPTIONS` preflight, and requires `POST` for the actual calls.
+`x402CheckoutRouter({ rpcUrl?, rpcUrls?, devnetRpcUrl?, devnetRpcUrls?, origin?, logger? })`
+returns an Express `RequestHandler` (see [Adapter options](#adapter-options)). It
+sets permissive CORS by default (`origin: '*'`), answers `OPTIONS` preflight, and
+requires `POST` for the actual calls.
 
 ## Mounting with Vercel / Next.js (pages API)
 
@@ -228,12 +253,44 @@ Response:
 The client puts `x_payment` into the `X-PAYMENT` header and retries the original
 request.
 
+## Building the 402 challenge: `solanaAccept`
+
+On the merchant side, build spec-shaped `accept` entries for your 402 body with
+`solanaAccept` — no hardcoded mints, USDC by default, an optional second token for
+a picker:
+
+```js
+import { solanaAccept } from '@nirholas/x402-payment-modal/server';
+
+const common = { payTo, feePayer, maxTimeoutSeconds: 60 };
+const accepts = [
+  solanaAccept({ token: 'usdc',  uiAmount: 0.25, ...common }), // $0.25 USDC
+  // Optional second token → the modal renders a token picker:
+  // solanaAccept({ token: 'three', uiAmount: 1000, ...common }),
+  // …or any SPL mint:
+  // solanaAccept({ mint: 'So111…', decimals: 9, name: 'MyToken', uiAmount: 5, ...common }),
+];
+
+res.status(402).json({ x402Version: 2, accepts });
+```
+
+`solanaAccept({ token?, mint?, payTo, feePayer, amount?, uiAmount?, decimals?, name?, network?, maxTimeoutSeconds? })`
+needs a `token: 'usdc' | 'three'` **or** an explicit `mint`, plus the price as
+`amount` (atomic integer string) **or** `uiAmount` (human units, converted via
+decimals). `feePayer` is the facilitator sponsor that pays the SOL network fee.
+
 ## Helpers
 
 | Export                     | Description                                                            |
 |----------------------------|------------------------------------------------------------------------|
+| `solanaAccept(args)`       | Build one Solana `accept` entry for a 402 challenge (see above).        |
+| `prepareSolanaCheckout(args)` | Build the partially-signed v0 transaction the buyer signs.          |
+| `encodeX402Payment(args)`  | Wrap the buyer-signed tx into the base64 `X-PAYMENT` envelope.         |
+| `handleCheckout(args)`     | Route `prepare`/`encode`; returns `{ status, body }`.                  |
 | `CheckoutError`            | `Error` subclass with `.status` and `.code`; mapped to HTTP by router. |
 | `isSolanaNetwork(network)` | `true` for Solana mainnet/devnet network identifiers.                  |
 | `X402_VERSION`             | `2` — the x402 envelope version produced by `encode`.                  |
 | `NETWORK_SOLANA_MAINNET`   | Canonical Solana mainnet network id.                                   |
-| `NETWORK_SOLANA_DEVNET`    | Canonical Solana devnet network id.                                    |
+| `NETWORK_SOLANA_DEVNET`    | Canonical Solana devnet network id.                                   |
+| `USDC_MINT_SOLANA`, `THREE_MINT` | Well-known mint constants.                                        |
+| `WELL_KNOWN_SOLANA_TOKENS` | `{ usdc, three }` token metadata keyed by lowercase shortcut.          |

@@ -168,4 +168,10 @@ rolled back. Callers should treat `cancelled` as a no-op, not a failure.
   noble hashes) are loaded on demand from CDN ESM and can be repointed for
   strict CSP via [`configure`](./api-reference.md#configure).
 - **Server:** optional, only for the Solana rail. Exposed at
-  `@nirholas/x402-payment-modal/server` with Express and Vercel adapters.
+  `@nirholas/x402-payment-modal/server` (framework-agnostic) with Express
+  (`./server/express`) and Vercel (`./server/vercel`) adapters. Peer deps
+  `@solana/web3.js` + `@solana/spl-token` (and `express` for that adapter) are
+  optional — install only when you mount the checkout.
+- **React:** optional bindings at `@nirholas/x402-payment-modal/react`
+  (`X402Button`, `useX402`) that dynamically import the browser core on first use,
+  so they are SSR-safe. See the [React reference](./react.md).

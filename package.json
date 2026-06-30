@@ -50,6 +50,7 @@
 		"README.md",
 		"TUTORIAL.md",
 		"CHANGELOG.md",
+		"CONTRIBUTING.md",
 		"LICENSE"
 	],
 	"scripts": {

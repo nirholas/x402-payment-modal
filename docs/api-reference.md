@@ -3,7 +3,8 @@
 The browser entry point. Import it as an ES module, or drop the bundle on a page
 and use `window.X402`. For how these pieces fit together see
 [architecture](./architecture.md); for the Solana backend see
-[server setup](./server-setup.md).
+[server setup](./server-setup.md); for the React bindings see the
+[React reference](./react.md).
 
 ```js
 import { pay, configure, init, version } from '@nirholas/x402-payment-modal';
@@ -92,8 +93,10 @@ import { configure } from '@nirholas/x402-payment-modal';
 configure({
   checkoutOrigin: 'https://pay.example.com',
   checkoutPath: '/api/x402-checkout',
-  brand: { name: 'Example', url: 'https://example.com' },
+  brand: { name: 'Example', url: 'https://example.com', logo: '/logo.svg' },
   footerNote: 'Secured by x402',
+  theme: 'auto',                                  // 'auto' | 'light' | 'dark'
+  cssVars: { '--x402-accent': '#ff5c00' },        // runtime brand-match
   builderCode: { wallet: 'examplewallet', service: 'example_api' },
   esm: {
     solanaWeb3: 'https://esm.sh/@solana/web3.js@1.95.0',
@@ -106,10 +109,15 @@ configure({
 |------------------|---------------------------------------|-----------------------------------------------------------------------------------------------|
 | `checkoutOrigin` | `string \| null`                      | Origin serving the Solana checkout endpoint. `null` resolves it from the script `src` or page origin. |
 | `checkoutPath`   | `string`                              | Checkout path. Default `'/api/x402-checkout'`.                                                |
-| `brand`          | `{ name, url }`                       | Footer attribution.                                                                            |
-| `footerNote`     | `string`                              | Text on the left side of the footer.                                                           |
+| `brand`          | `{ name?, url?, logo? }`              | Footer attribution (`name`/`url`) and an optional header `logo` (URL).                         |
+| `footerNote`     | `string`                              | Text on the left side of the footer. Default `'x402 · onchain settled'`.                       |
+| `theme`          | `'auto' \| 'light' \| 'dark'`         | Force the color scheme. Default `'auto'` (follow the OS). See [theming](./theming.md).        |
+| `cssVars`        | `Record<string,string> \| null`       | Flat map of `--x402-*` design tokens to brand-match at runtime, e.g. `{ '--x402-radius': '8px' }`. |
 | `builderCode`    | `{ wallet, service }`                 | ERC-8021 builder-code echo. Each value lowercase `[a-z0-9_]{1,32}`.                            |
 | `esm`            | `{ solanaWeb3, nobleHashesSha3 }`     | CDN URLs for crypto helpers loaded on demand. Repoint for strict CSP / self-hosting.          |
+
+Nested objects (`brand`, `builderCode`, `esm`, `cssVars`) are **shallow-merged**,
+so you can set a single field without clearing the others.
 
 > The `checkoutOrigin` / `checkoutPath` settings only matter for the Solana rail.
 > EVM-only sites can ignore them.
@@ -136,10 +144,29 @@ The package version string.
 
 ```js
 import { version } from '@nirholas/x402-payment-modal';
-console.log(version); // "1.1.0"
+console.log(version); // e.g. "1.2.0"
 ```
 
 ---
+
+## Token constants
+
+For inline merchants composing a 402 challenge in the browser, the client also
+exports the well-known Solana mints (also at `window.X402.tokens`):
+
+```js
+import { USDC_MINT_SOLANA, THREE_MINT, KNOWN_SOLANA_TOKENS }
+  from '@nirholas/x402-payment-modal';
+```
+
+| Export | Type | Notes |
+|--------|------|-------|
+| `USDC_MINT_SOLANA` | `string` | Solana USDC mint (mainnet) — the always-on default settlement asset. |
+| `THREE_MINT` | `string` | An optional opt-in SPL token recognized by the modal; used only when an endpoint chooses to accept it alongside USDC. |
+| `KNOWN_SOLANA_TOKENS` | `Readonly<Record<string, { symbol, name, decimals, stable?, accent?, glyph? }>>` | Mints the modal renders with the correct symbol/decimals even when the `accept` omits `extra.name`/`extra.decimals`. |
+
+The server side builds accepts with the higher-level `solanaAccept()` helper — see
+[server setup](./server-setup.md).
 
 ## HTML data attributes
 
