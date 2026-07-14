@@ -5,8 +5,6 @@
 [![npm](https://img.shields.io/npm/v/@three-ws/x402-payment-modal.svg)](https://www.npmjs.com/package/@three-ws/x402-payment-modal)
 [![npm downloads](https://img.shields.io/npm/dm/@three-ws/x402-payment-modal.svg)](https://www.npmjs.com/package/@three-ws/x402-payment-modal)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@three-ws/x402-payment-modal.svg)](https://bundlephobia.com/package/@three-ws/x402-payment-modal)
-[![License: Proprietary](https://img.shields.io/badge/license-Proprietary-red.svg)](./LICENSE)
-
 **A drop-in payment modal for any [x402](https://x402.org) paid endpoint.** The
 browser client is one ES module with zero runtime dependencies; it turns an HTTP
 `402 Payment Required` challenge into a polished checkout: wallet connect (Phantom
@@ -515,8 +513,4 @@ a token picker. See [Accepting multiple Solana tokens](#accepting-multiple-solan
 
 ## License
 
-Proprietary — Copyright (c) 2026 nirholas. All Rights Reserved. Unauthorized use, copying, modification, or distribution is prohibited. See [LICENSE](./LICENSE).
-
-> Standalone package. Browser client is dependency-free; server/react peer deps
-> are optional. Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) and
-> <https://github.com/nirholas/x402-payment-modal/issues>.
+All rights reserved. See [LICENSE](LICENSE).
