@@ -514,3 +514,7 @@ a token picker. See [Accepting multiple Solana tokens](#accepting-multiple-solan
 ## License
 
 All rights reserved. See [LICENSE](LICENSE).
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=nirholas/x402-payment-modal&type=Date)](https://www.star-history.com/#nirholas/x402-payment-modal&Date)
