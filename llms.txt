@@ -1,0 +1,28 @@
+# x402-payment-modal
+
+> The complete drop-in checkout for any x402 paid endpoint: wallet connect, sign, settle, receipt.
+
+x402-payment-modal is an open-source repository by nirholas, part of the three.ws ecosystem.
+
+## Docs
+
+- [README](https://github.com/nirholas/x402-payment-modal/blob/HEAD/README.md): install, usage and reference
+- [Why](https://github.com/nirholas/x402-payment-modal/blob/HEAD/README.md#why)
+- [Which x402 modal do I want?](https://github.com/nirholas/x402-payment-modal/blob/HEAD/README.md#which-x402-modal-do-i-want)
+- [Package subpaths](https://github.com/nirholas/x402-payment-modal/blob/HEAD/README.md#package-subpaths)
+- [Install](https://github.com/nirholas/x402-payment-modal/blob/HEAD/README.md#install)
+- [Quick start](https://github.com/nirholas/x402-payment-modal/blob/HEAD/README.md#quick-start)
+- [Architecture](https://github.com/nirholas/x402-payment-modal/blob/HEAD/README.md#architecture)
+- [Client API](https://github.com/nirholas/x402-payment-modal/blob/HEAD/README.md#client-api)
+- [Configuration](https://github.com/nirholas/x402-payment-modal/blob/HEAD/README.md#configuration)
+- [AGENTS.md](https://github.com/nirholas/x402-payment-modal/blob/HEAD/AGENTS.md): guidance for coding agents
+- [Full text for LLMs](https://github.com/nirholas/x402-payment-modal/blob/HEAD/llms-full.txt): the README inlined
+
+## Project
+
+- [Source](https://github.com/nirholas/x402-payment-modal)
+- [Issues](https://github.com/nirholas/x402-payment-modal/issues)
+- [Discussions](https://github.com/nirholas/x402-payment-modal/discussions)
+- [Homepage](https://github.com/nirholas/x402-payment-modal)
+- [three.ws](https://three.ws): the platform this is part of
+- [All repositories by nirholas](https://github.com/nirholas/nirholas#readme)

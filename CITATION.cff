@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it as below.
+title: "x402-payment-modal"
+abstract: "The complete drop-in checkout for any x402 paid endpoint: wallet connect, sign, settle, receipt."
+repository-code: "https://github.com/nirholas/x402-payment-modal"
+url: "https://three.ws"
+authors:
+  - name: three.ws
+    website: "https://three.ws"
