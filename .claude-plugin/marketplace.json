@@ -1,0 +1,22 @@
+{
+  "name": "x402-payment-modal",
+  "owner": {
+    "name": "nirholas"
+  },
+  "description": "x402 payment modal with React bindings and the server-side Solana checkout helpers.",
+  "plugins": [
+    {
+      "name": "x402-payment-modal-kit",
+      "source": "./plugins/x402-payment-modal-kit",
+      "description": "Add a drop-in x402 checkout to a web page or React app, plus the Express and Vercel Solana checkout backend it needs.",
+      "category": "development",
+      "tags": [
+        "x402",
+        "payments",
+        "checkout",
+        "react",
+        "solana"
+      ]
+    }
+  ]
+}

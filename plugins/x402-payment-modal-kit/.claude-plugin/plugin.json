@@ -1,0 +1,19 @@
+{
+  "name": "x402-payment-modal-kit",
+  "version": "1.2.0",
+  "description": "Add a drop-in x402 checkout to a web page or React app, plus the Express and Vercel Solana checkout backend it needs.",
+  "author": {
+    "name": "nirholas"
+  },
+  "repository": "https://github.com/nirholas/x402-payment-modal",
+  "homepage": "https://github.com/nirholas/x402-payment-modal",
+  "keywords": [
+    "x402",
+    "payments",
+    "checkout",
+    "modal",
+    "react",
+    "solana",
+    "usdc"
+  ]
+}
